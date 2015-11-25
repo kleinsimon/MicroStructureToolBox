@@ -17,6 +17,7 @@ Open one or more binary (black/white) images or binarize an image.
 Start the plugin and select the results you want to obtain. The plugin can than be called by selecting "Plugins>Analyze>Measure linear distances"
 
 #Available Options:
+```
 -Distance between measures      : the number of pixels to skip between the analyzed lines
 -Measure all opened images      : When not selected, only the active image will be analyzed
 -Standard Deviations            : Print standard deviations for all measurements
@@ -26,3 +27,4 @@ Start the plugin and select the results you want to obtain. The plugin can than 
 -X / Y                          : Counts only in X / Y or both directions
 -Both Directions                : Calculates also the mean of both Directions
 -Both Directions and Phases     : Calculates also the mean of both Phases and both Directions (All Stripes)
+```
