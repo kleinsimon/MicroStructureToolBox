@@ -123,7 +123,7 @@ public class LinearDistance implements PlugInFilter {
 
 	public void doAnalyzeImage(int[][] pixels, Boolean goX, int step, SummaryStatistics w, SummaryStatistics b,
 			ImageProcessor overlay, double calib) {
-		int color = (goX) ? Color.GREEN.getRGB() : Color.BLUE.getRGB();
+		int color = (goX) ? Color.RED.getRGB() : Color.GREEN.getRGB();
 		int count = 0;
 		Boolean now = null;
 		Boolean last = null;
@@ -251,7 +251,7 @@ public class LinearDistance implements PlugInFilter {
 			oix.copyBits(oiy, 0, 0, Blitter.ADD);
 			ImageRoi roi = new ImageRoi(0, 0, oix);
 			roi.setName(iplus.getShortTitle() + " measured stripes");
-			roi.setOpacity(0.3d);
+			roi.setOpacity(0.5d);
 			iplus.deleteRoi();
 			iplus.setRoi(roi, true);
 		}
