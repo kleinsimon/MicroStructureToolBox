@@ -147,9 +147,9 @@ public class LinearDistance implements PlugInFilter {
 				if ((now != last || isLast)) {
 					if (!(doExcludeEdges && onEdge)) {
 						if (last)
-							w.addValue((double) count * calib);
+							w.addValue((double) (count + 1) * calib);
 						else
-							b.addValue((double) count * calib);
+							b.addValue((double) (count + 1) * calib);
 						if (doShowOverlay && overlay != null) {
 							if ((doCalculateWhite && last) || (doCalculateBlack && !last)) {
 								for (int yi = 0; yi <= count; yi++) {
@@ -166,7 +166,6 @@ public class LinearDistance implements PlugInFilter {
 					count = 0;
 					isFirst = false;
 				}
-
 				if ((now == last)) {
 					count++;
 				}
