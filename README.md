@@ -23,9 +23,9 @@ Apply image calibration        | Applies the set scale of each image to the resu
 Measure all opened images      | When not selected, only the active image will be analyzed
 Standard Deviations            | Print standard deviations for all measurements
 Numbers                        | Print the number of counted stripes
-~~White/Black ~~               | ~~Counts only white / black stripes~~
+~~White/Black~~                | ~~Counts only white / black stripes~~
 Both Phases                    | Calculates also the mean of both (all) Phases (Black and White)
 ~~X / Y~~                      | ~~Counts only in X / Y or both directions~~
-~~Both Directions ~~           | ~~Calculates also the mean of both Directions~~
-~~Both Directions and Phases  ~~| ~~Calculates also the mean of both Phases and both Directions (All Stripes)~~
+~~Both Directions~~            | ~~Calculates also the mean of both Directions~~
+~~Both Directions and Phases~~ | ~~Calculates also the mean of both Phases and both Directions (All Stripes)~~
 
