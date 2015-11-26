@@ -8,6 +8,7 @@
 //      Date:           24.11.2015
 //      Comment:       
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.apache.commons.math3.stat.descriptive.AggregateSummaryStatistics;
@@ -15,24 +16,29 @@ import org.apache.commons.math3.stat.descriptive.StatisticalSummaryValues;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
+import ij.gui.ImageRoi;
+import ij.Prefs;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.PlugInFilter;
+import ij.process.Blitter;
+import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
 public class LinearDistance implements PlugInFilter {
-	static int step = 1;
-	static String selectedStep = "0 degrees";
-	static boolean doIterateAllImages = false;
-	static boolean doCalculateStDev = true;
-	static boolean doCalculateNum = true;
-	static boolean doCalculateWhite = false;
-	static boolean doCalculateBlack = false;
-	static boolean doCalculateBlackAndWhite = false;
-	static boolean doCalculateX = false;
-	static boolean doCalculateY = false;
-	static boolean doCalculateXAndY = true;
-	static boolean doCalculateAll = false;
-	// ResultsTable rt = ResultsTable.getResultsTable();
+	static int step = Prefs.getInt("LinearDistance.stepSize", 1);
+	static boolean doIterateAllImages = Prefs.getBoolean("LinearDistance.doIterateAllImages", true);
+	static boolean doExcludeEdges = Prefs.getBoolean("LinearDistance.doExcludeEdges", true);
+	static boolean doShowOverlay = Prefs.getBoolean("LinearDistance.doShowOverlay", true);
+	static boolean doCalculateStDev = Prefs.getBoolean("LinearDistance.doCalculateStDev", true);
+	static boolean doCalculateNum = Prefs.getBoolean("LinearDistance.doCalculateNum", true);
+	static boolean doCalculateWhite = Prefs.getBoolean("LinearDistance.doCalculateWhite", true);
+	static boolean doCalculateBlack = Prefs.getBoolean("LinearDistance.doCalculateBlack", true);
+	static boolean doCalculateBlackAndWhite = Prefs.getBoolean("LinearDistance.doCalculateBlackAndWhite", true);
+	static boolean doCalculateX = Prefs.getBoolean("LinearDistance.doCalculateX", true);
+	static boolean doCalculateY = Prefs.getBoolean("LinearDistance.doCalculateY", true);
+	static boolean doCalculateXAndY = Prefs.getBoolean("LinearDistance.doCalculateXAndY", true);
+	static boolean doCalculateAll = Prefs.getBoolean("LinearDistance.doCalculateAll", true);
+
 	ResultsTable rt = new ResultsTable();
 
 	public int setup(String arg, ImagePlus imp) {
@@ -51,61 +57,104 @@ public class LinearDistance implements PlugInFilter {
 		gd.addNumericField("Distance between measures in pixels", step, 1);
 
 		gd.addCheckbox("Measure all opened Images", doIterateAllImages);
+		gd.addCheckbox("Exclude stripes cut by Edges", doExcludeEdges);
+		gd.addCheckbox("Show measured pixels as overlay", doShowOverlay);
+
 		gd.addMessage("Activate the results you want to gather");
+
 		gd.addCheckbox("Standard Deviations  ", doCalculateStDev);
-		gd.addCheckbox("Numbers  ", doCalculateStDev);
+		gd.addCheckbox("Numbers  ", doCalculateNum);
 		gd.addCheckbox("White Phase  ", doCalculateWhite);
 		gd.addCheckbox("Black Phase  ", doCalculateBlack);
-		gd.addCheckbox("Both Phases  ", doCalculateBlackAndWhite);
+		// gd.addCheckbox("Both Phases ", doCalculateBlackAndWhite);
 		gd.addCheckbox("X Direction  ", doCalculateX);
 		gd.addCheckbox("Y Direction  ", doCalculateY);
-		gd.addCheckbox("Both Directions  ", doCalculateXAndY);
-		gd.addCheckbox("Both Directions and both Phases ", doCalculateAll);
+		// gd.addCheckbox("Both Directions ", doCalculateXAndY);
+		// gd.addCheckbox("Both Directions and both Phases ", doCalculateAll);
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
 		step = Math.max((int) gd.getNextNumber(), 1);
-		selectedStep = gd.getNextChoice();
+		Prefs.set("LinearDistance.stepSize", step);
 		doIterateAllImages = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
+		doExcludeEdges = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
+		doShowOverlay = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
 		doCalculateStDev = gd.getNextBoolean();
-		doCalculateWhite = gd.getNextBoolean();
-		doCalculateBlack = gd.getNextBoolean();
-		doCalculateBlackAndWhite = gd.getNextBoolean();
-		doCalculateX = gd.getNextBoolean();
-		doCalculateY = gd.getNextBoolean();
-		doCalculateXAndY = gd.getNextBoolean();
-		doCalculateAll = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalculateStDev", doCalculateStDev);
 		doCalculateNum = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalculateNum", doCalculateNum);
+		doCalculateWhite = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalculateWhite", doCalculateWhite);
+		doCalculateBlack = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalculateBlack", doCalculateBlack);
+		// doCalculateBlackAndWhite = gd.getNextBoolean();
+		// Prefs.set("LinearDistance.doCalculateBlackAndWhite",
+		// doCalculateBlackAndWhite);
+		doCalculateX = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalculateX", doCalculateX);
+		doCalculateY = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalculateY", doCalculateY);
+		// doCalculateXAndY = gd.getNextBoolean();
+		// Prefs.set("LinearDistance.doCalculateXAndY", doCalculateXAndY);
+		// doCalculateAll = gd.getNextBoolean();
+		// Prefs.set("LinearDistance.doCalculateAll", doCalculateAll);
+
 		return true;
 	}
 
 	public void run(ImageProcessor ip) {
 		if (doIterateAllImages) {
 			for (int id : ij.WindowManager.getIDList()) {
-				analyzeImage(ij.WindowManager.getImage(id).getProcessor());
+				analyzeImage(ij.WindowManager.getImage(id));
 			}
-		} else
-			analyzeImage(ip);
+		} else {
+			analyzeImage(ij.IJ.getImage());
+		}
 	}
 
-	public void doAnalyzeImage(int[][] pixels, int step, SummaryStatistics w, SummaryStatistics b) {
-		int count = 0;
+	public void doAnalyzeImage(int[][] pixels, Boolean goX, int step, SummaryStatistics w, SummaryStatistics b,
+			ImageProcessor overlay) {
 
+		int count = 0;
 		Boolean now = null;
 		Boolean last = null;
+		Boolean onEdge = true;
+		Boolean isLast = null;
 
 		for (int x = 0; x < pixels.length; x += step) {
+			onEdge = true;
 			for (int y = 0; y < pixels[x].length; y++) {
+				isLast = y == pixels[x].length - 1;
+				if (isLast)
+					onEdge = true;
 				now = (pixels[x][y] == (255));
 				if (now == last)
 					count++;
-				if ((now != last || y == pixels[x].length - 1) && count > 0) {
-					if (last)
-						w.addValue(count);
-					else
-						b.addValue(count);
+				if ((now != last || isLast) && count > 0) {
+					if (!doExcludeEdges || !onEdge) {
+						if (last)
+							w.addValue(count);
+						else
+							b.addValue(count);
+
+						if (doShowOverlay && overlay != null) {
+							if ((doCalculateWhite && last) || (doCalculateBlack && !last)) {
+								int color = (goX) ? Color.GREEN.getRGB() : Color.BLUE.getRGB();
+								for (int yi = 0; yi <= count; yi++) {
+									if (goX)
+										overlay.set(y - yi - 1, x, color);
+									else
+										overlay.set(x, y - yi - 1, color);
+								}
+							}
+						}
+					}
+					onEdge = false;
 					count = 0;
 				}
 				last = now;
@@ -116,7 +165,19 @@ public class LinearDistance implements PlugInFilter {
 		}
 	}
 
-	private void analyzeImage(ImageProcessor ip) {
+	private void analyzeImage(ImagePlus iplus) {
+		ImageProcessor ip = iplus.getProcessor();
+		ImageProcessor oix = null;
+		ImageProcessor oiy = null;
+		if (doShowOverlay) {
+			oix = new ColorProcessor(ip.getWidth(), ip.getHeight());
+			oiy = new ColorProcessor(ip.getWidth(), ip.getHeight());
+			oix.setColor(Color.TRANSLUCENT);
+			oiy.setColor(Color.TRANSLUCENT);
+			oix.fill();
+			oiy.fill();
+		}
+
 		int[][] pixels = ip.getIntArray();
 		int[][] pixelsRotate = new int[pixels[0].length][pixels.length];
 
@@ -129,8 +190,12 @@ public class LinearDistance implements PlugInFilter {
 		SummaryStatistics wdx = new SummaryStatistics();
 		SummaryStatistics bdx = new SummaryStatistics();
 
-		doAnalyzeImage(pixels, step, wdy, bdy);
-		doAnalyzeImage(pixelsRotate, step, wdx, bdx);
+		if (doCalculateY) {
+			doAnalyzeImage(pixels, false, step, wdy, bdy, oiy);
+		}
+		if (doCalculateX) {
+			doAnalyzeImage(pixelsRotate, true, step, wdx, bdx, oix);
+		}
 
 		Collection<SummaryStatistics> colbothy = new ArrayList<SummaryStatistics>();
 		Collection<SummaryStatistics> colbothx = new ArrayList<SummaryStatistics>();
@@ -155,10 +220,18 @@ public class LinearDistance implements PlugInFilter {
 		StatisticalSummaryValues bboth = AggregateSummaryStatistics.aggregate(colbboth);
 		StatisticalSummaryValues all = AggregateSummaryStatistics.aggregate(colall);
 
+		if (doShowOverlay) {
+			oix.copyBits(oiy, 0, 0, Blitter.ADD);
+			ImageRoi roi = new ImageRoi(0, 0, oix);
+			roi.setName(iplus.getShortTitle() + " measured stripes");
+			roi.setOpacity(0.3d);
+			iplus.deleteRoi();
+			iplus.setRoi(roi, true);
+		}
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;
 
-		rt.setValue("Image", row, ij.IJ.getImage().getTitle());
+		rt.setValue("Image", row, iplus.getTitle());
 		if (doCalculateWhite && doCalculateY) {
 			rt.setValue("Mean Dist. White y", row, wdy.getMean());
 			if (doCalculateStDev)
@@ -173,7 +246,7 @@ public class LinearDistance implements PlugInFilter {
 			if (doCalculateNum)
 				rt.setValue("N Black Stripes y", row, bdy.getN());
 		}
-		if (doCalculateBlackAndWhite && doCalculateY) {
+		if (doCalculateBlack && doCalculateWhite && doCalculateY) {
 			rt.setValue("Mean Dist. All y", row, bothy.getMean());
 			rt.setValue("st.Dev. All y", row, bothy.getStandardDeviation());
 			if (doCalculateNum)
@@ -193,28 +266,28 @@ public class LinearDistance implements PlugInFilter {
 			if (doCalculateNum)
 				rt.setValue("N Black Stripes x", row, bdx.getN());
 		}
-		if (doCalculateBlackAndWhite && doCalculateX) {
+		if (doCalculateBlack && doCalculateWhite && doCalculateX) {
 			rt.setValue("Mean Dist. All x", row, bothx.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. All x", row, bothx.getStandardDeviation());
 			if (doCalculateNum)
 				rt.setValue("N All Stripes x", row, bothx.getN());
 		}
-		if (doCalculateWhite && doCalculateXAndY) {
+		if (doCalculateWhite && doCalculateX && doCalculateX) {
 			rt.setValue("Mean Dist. White x and y", row, wboth.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. White x and y", row, wboth.getStandardDeviation());
 			if (doCalculateNum)
 				rt.setValue("N White Stripes x and y", row, wboth.getN());
 		}
-		if (doCalculateBlack && doCalculateXAndY) {
+		if (doCalculateBlack && doCalculateX && doCalculateX) {
 			rt.setValue("Mean Dist. Black x and y", row, bboth.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. Black x and y", row, bboth.getStandardDeviation());
 			if (doCalculateNum)
 				rt.setValue("N Black Stripes x and y", row, bboth.getN());
 		}
-		if (doCalculateAll) {
+		if (doCalculateBlack && doCalculateWhite && doCalculateX && doCalculateX) {
 			rt.setValue("Mean Dist. All x and y", row, all.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. All x and y", row, all.getStandardDeviation());
