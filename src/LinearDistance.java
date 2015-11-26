@@ -18,6 +18,7 @@ import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.ImageRoi;
 import ij.Prefs;
+import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.Blitter;
@@ -26,6 +27,7 @@ import ij.process.ImageProcessor;
 
 public class LinearDistance implements PlugInFilter {
 	static int step = Prefs.getInt("LinearDistance.stepSize", 1);
+	static boolean doApplyCalibration = Prefs.getBoolean("LinearDistance.doApplyCalibration", true);
 	static boolean doIterateAllImages = Prefs.getBoolean("LinearDistance.doIterateAllImages", true);
 	static boolean doExcludeEdges = Prefs.getBoolean("LinearDistance.doExcludeEdges", true);
 	static boolean doShowOverlay = Prefs.getBoolean("LinearDistance.doShowOverlay", true);
@@ -55,7 +57,7 @@ public class LinearDistance implements PlugInFilter {
 		gd.addMessage("All values are measured in pixels.");
 
 		gd.addNumericField("Distance between measures in pixels", step, 1);
-
+		gd.addCheckbox("Apply image calbration", doApplyCalibration);
 		gd.addCheckbox("Measure all opened Images", doIterateAllImages);
 		gd.addCheckbox("Exclude stripes cut by Edges", doExcludeEdges);
 		gd.addCheckbox("Show measured pixels as overlay", doShowOverlay);
@@ -78,6 +80,8 @@ public class LinearDistance implements PlugInFilter {
 
 		step = Math.max((int) gd.getNextNumber(), 1);
 		Prefs.set("LinearDistance.stepSize", step);
+		doApplyCalibration = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doApplyScale", doApplyCalibration);
 		doIterateAllImages = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		doExcludeEdges = gd.getNextBoolean();
@@ -118,7 +122,7 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	public void doAnalyzeImage(int[][] pixels, Boolean goX, int step, SummaryStatistics w, SummaryStatistics b,
-			ImageProcessor overlay) {
+			ImageProcessor overlay, double calib) {
 
 		int count = 0;
 		Boolean now = null;
@@ -135,12 +139,12 @@ public class LinearDistance implements PlugInFilter {
 				now = (pixels[x][y] == (255));
 				if (now == last)
 					count++;
-				if ((now != last || isLast) && count > 0) {
+				if ((now != last || isLast)) {
 					if (!doExcludeEdges || !onEdge) {
 						if (last)
-							w.addValue(count);
+							w.addValue(count * calib);
 						else
-							b.addValue(count);
+							b.addValue(count * calib);
 
 						if (doShowOverlay && overlay != null) {
 							if ((doCalculateWhite && last) || (doCalculateBlack && !last)) {
@@ -190,11 +194,21 @@ public class LinearDistance implements PlugInFilter {
 		SummaryStatistics wdx = new SummaryStatistics();
 		SummaryStatistics bdx = new SummaryStatistics();
 
+		Double calx = 1.0d;
+		Double caly = 1.0d;
+		String unit = "px";
+		Calibration cal = iplus.getCalibration();
+		if (doApplyCalibration && cal.scaled()) {
+			calx = cal.pixelWidth;
+			caly = cal.pixelHeight;
+			unit = cal.getUnit();
+		}
+
 		if (doCalculateY) {
-			doAnalyzeImage(pixels, false, step, wdy, bdy, oiy);
+			doAnalyzeImage(pixels, false, step, wdy, bdy, oiy, calx);
 		}
 		if (doCalculateX) {
-			doAnalyzeImage(pixelsRotate, true, step, wdx, bdx, oix);
+			doAnalyzeImage(pixelsRotate, true, step, wdx, bdx, oix, caly);
 		}
 
 		Collection<SummaryStatistics> colbothy = new ArrayList<SummaryStatistics>();
@@ -232,6 +246,10 @@ public class LinearDistance implements PlugInFilter {
 		int row = rt.getCounter() - 1;
 
 		rt.setValue("Image", row, iplus.getTitle());
+		if (doApplyCalibration && cal.scaled()) {
+			rt.setValue("Unit", row, unit);
+			rt.setValue("Calibration X/Y", row, calx.toString() + ((!calx.equals(caly)) ? "/" + caly.toString() : ""));
+		}
 		if (doCalculateWhite && doCalculateY) {
 			rt.setValue("Mean Dist. White y", row, wdy.getMean());
 			if (doCalculateStDev)
