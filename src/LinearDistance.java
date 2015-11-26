@@ -201,7 +201,10 @@ public class LinearDistance implements PlugInFilter {
 		if (doApplyCalibration && cal.scaled()) {
 			calx = cal.pixelWidth;
 			caly = cal.pixelHeight;
-			unit = cal.getUnit();
+			unit = cal.getXUnit();
+			if (unit != cal.getYUnit()) {
+				unit += "/" + cal.getYUnit();
+			}
 		}
 
 		if (doCalculateY) {
@@ -246,8 +249,8 @@ public class LinearDistance implements PlugInFilter {
 		int row = rt.getCounter() - 1;
 
 		rt.setValue("Image", row, iplus.getTitle());
+		rt.setValue("Unit", row, unit);
 		if (doApplyCalibration && cal.scaled()) {
-			rt.setValue("Unit", row, unit);
 			rt.setValue("Calibration X/Y", row, calx.toString() + ((!calx.equals(caly)) ? "/" + caly.toString() : ""));
 		}
 		if (doCalculateWhite && doCalculateY) {
