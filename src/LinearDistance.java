@@ -123,47 +123,57 @@ public class LinearDistance implements PlugInFilter {
 
 	public void doAnalyzeImage(int[][] pixels, Boolean goX, int step, SummaryStatistics w, SummaryStatistics b,
 			ImageProcessor overlay, double calib) {
-
+		int color = (goX) ? Color.GREEN.getRGB() : Color.BLUE.getRGB();
 		int count = 0;
 		Boolean now = null;
 		Boolean last = null;
-		Boolean onEdge = true;
 		Boolean isLast = null;
+		Boolean isFirst = null;
+		Boolean onEdge = null;
 
 		for (int x = 0; x < pixels.length; x += step) {
 			onEdge = true;
+			isFirst = true;
 			for (int y = 0; y < pixels[x].length; y++) {
-				isLast = y == pixels[x].length - 1;
-				if (isLast)
-					onEdge = true;
 				now = (pixels[x][y] == (255));
-				if (now == last)
-					count++;
-				if ((now != last || isLast)) {
-					if (!doExcludeEdges || !onEdge) {
-						if (last)
-							w.addValue(count * calib);
-						else
-							b.addValue(count * calib);
+				if (y == 0)
+					last = now;
+				isLast = y == pixels[x].length - 1;
+				if (isLast || isFirst)
+					onEdge = true;
+				else
+					onEdge = false;
 
+				if ((now != last || isLast)) {
+					if (!(doExcludeEdges && onEdge)) {
+						if (last)
+							w.addValue((double) count * calib);
+						else
+							b.addValue((double) count * calib);
 						if (doShowOverlay && overlay != null) {
 							if ((doCalculateWhite && last) || (doCalculateBlack && !last)) {
-								int color = (goX) ? Color.GREEN.getRGB() : Color.BLUE.getRGB();
 								for (int yi = 0; yi <= count; yi++) {
+									int ny = Math.max(0, y - yi - 1);
 									if (goX)
-										overlay.set(y - yi - 1, x, color);
+										overlay.set(ny, x, color);
 									else
-										overlay.set(x, y - yi - 1, color);
+										overlay.set(x, ny, color);
 								}
 							}
 						}
 					}
-					onEdge = false;
+
 					count = 0;
+					isFirst = false;
+				}
+
+				if ((now == last)) {
+					count++;
 				}
 				last = now;
 				now = null;
 			}
+
 			last = null;
 			count = 0;
 		}
