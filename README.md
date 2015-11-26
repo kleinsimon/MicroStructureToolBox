@@ -1,6 +1,6 @@
 # LinearDistance
-Plugin for ImageJ to measure linear distances for binary images in X and Y Direction.
-It scans an image linewise (with a gives skip factor) in both directions and finds stripes of only black or white lines and calculates the mean length of these stripes. 
+Plugin for ImageJ to measure linear distances in binary images in X and Y direction.
+It scans an image linewise (with a given skip distance) in both directions and finds stripes of only black or white and calculates the mean length of these stripes. 
 
 # Application
 Used for the calcuation of mean free paths in a two phase material.
@@ -10,10 +10,10 @@ Used for the calcuation of mean free paths in a two phase material.
 * [Apache Commons Math](https://commons.apache.org/proper/commons-math/) (tested with commons-math3-3.5, included in the .jar file)
 
 # Installation
-Copy the File LinearDistance_.jar in the plugins folder. 
+Copy the File **LinearDistance_.jar** in the plugins folder. 
 
 # Usage
-Open one or more binary (black/white) images or binarize an image. Start the plugin by selecting "Plugins>Analyze>Measure linear distances" and select the results you want to obtain. **All given lengths will be in pixels**, no scale is applied.
+Open one or more binary (black/white) images or binarize an image. Start the plugin by selecting "Plugins>Analyze>Measure linear distances" and select the results you want to obtain. ~~**All given lengths will be in pixels**, no scale is applied~~.
 
 #Available Options:
 Option                         |  Description
