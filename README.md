@@ -10,7 +10,7 @@ Used for the calcuation of mean free paths in a two phase material.
 * [Apache Commons Math](https://commons.apache.org/proper/commons-math/) (tested with commons-math3-3.5, included in the .jar file)
 
 # Installation
-Copy the File **LinearDistance_.jar** in the plugins folder. 
+Copy the File **LinearDistance_.jar** in the plugins/jars folder. 
 
 # Usage
 Open one or more binary (black/white) images or binarize an image. Start the plugin by selecting "Plugins>Analyze>Measure linear distances" and select the results you want to obtain. ~~**All given lengths will be in pixels**, no scale is applied~~.
@@ -18,14 +18,11 @@ Open one or more binary (black/white) images or binarize an image. Start the plu
 #Available Options:
 Option                         |  Description
 -------------------------------|----------------------------------------
-Distance between measures      | the number of pixels to skip between the analyzed lines
 Apply image calibration        | Applies the set scale of each image to the results (by multiplying it)
+Step distance between measures | The number of pixels to skip between the analyzed lines
+Calibrate step distance        | Skip units instead of pixels
 Measure all opened images      | When not selected, only the active image will be analyzed
 Standard Deviations            | Print standard deviations for all measurements
 Numbers                        | Print the number of counted stripes
-~~White/Black~~                | ~~Counts only white / black stripes~~
 Both Phases                    | Calculates also the mean of both (all) Phases (Black and White)
-~~X / Y~~                      | ~~Counts only in X / Y or both directions~~
-~~Both Directions~~            | ~~Calculates also the mean of both Directions~~
-~~Both Directions and Phases~~ | ~~Calculates also the mean of both Phases and both Directions (All Stripes)~~
 
