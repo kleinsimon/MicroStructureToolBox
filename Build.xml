@@ -1,4 +1,4 @@
-<project name="LinearDistance" default="" basedir=".">
+	<project name="LinearDistance" default="" basedir=".">
     <description>
     	LinearDistance build file
     </description>
@@ -6,9 +6,9 @@
   <property name="build" location="bin" />
   <property name="dist"  location="dist" />
  
-	 <property name="pluginsDir"  location="$basedir/../../IJ/plugins/" />
+	 <property name="pluginsDir"  location="$basedir/../../IJ/plugins/jars/" />
  
-  <property name="user.name" value="Patrick Pirrotte" />
+  <property name="user.name" value="Simon Klein" />
 <target name="main" depends="compress" description="Main target">
 	<echo>
 		Building the .jar file.

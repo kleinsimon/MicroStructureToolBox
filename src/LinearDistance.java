@@ -3,10 +3,9 @@
 //      Name:           LinearDistance
 //      Project:        Measures the linear distance between binary inversions in x and y direction
 //      Version:        0.1
-//
 //      Author:         Simon Klein, simon.klein@simonklein.de
 //      Date:           24.11.2015
-//      Comment:       
+//      Comment:		Buildfile taken from Patrick Pirrotte       
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -28,6 +27,7 @@ import ij.process.ImageProcessor;
 public class LinearDistance implements PlugInFilter {
 	static int step = Prefs.getInt("LinearDistance.stepSize", 1);
 	static boolean doApplyCalibration = Prefs.getBoolean("LinearDistance.doApplyCalibration", true);
+	static boolean doCalibrateStep = Prefs.getBoolean("LinearDistance.doCalibrateStep", false);
 	static boolean doIterateAllImages = Prefs.getBoolean("LinearDistance.doIterateAllImages", true);
 	static boolean doExcludeEdges = Prefs.getBoolean("LinearDistance.doExcludeEdges", true);
 	static boolean doShowOverlay = Prefs.getBoolean("LinearDistance.doShowOverlay", true);
@@ -54,34 +54,30 @@ public class LinearDistance implements PlugInFilter {
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Linear Distances Plugin, created by Simon Klein");
 		gd.addMessage("This plug-in calculates the linear distances in x and y directions for binary images.");
-		gd.addMessage("All values are measured in pixels.");
-
-		gd.addNumericField("Distance between measures in pixels", step, 1);
 		gd.addCheckbox("Apply image calbration", doApplyCalibration);
+		gd.addNumericField("Step distance between measures in pixels/units", step, 1);
+		gd.addCheckbox("Step distance in units", doCalibrateStep);
 		gd.addCheckbox("Measure all opened Images", doIterateAllImages);
 		gd.addCheckbox("Exclude stripes cut by Edges", doExcludeEdges);
 		gd.addCheckbox("Show measured pixels as overlay", doShowOverlay);
-
 		gd.addMessage("Activate the results you want to gather");
-
 		gd.addCheckbox("Standard Deviations  ", doCalculateStDev);
 		gd.addCheckbox("Numbers  ", doCalculateNum);
 		gd.addCheckbox("White Phase  ", doCalculateWhite);
 		gd.addCheckbox("Black Phase  ", doCalculateBlack);
-		// gd.addCheckbox("Both Phases ", doCalculateBlackAndWhite);
 		gd.addCheckbox("X Direction  ", doCalculateX);
 		gd.addCheckbox("Y Direction  ", doCalculateY);
-		// gd.addCheckbox("Both Directions ", doCalculateXAndY);
-		// gd.addCheckbox("Both Directions and both Phases ", doCalculateAll);
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
-		step = Math.max((int) gd.getNextNumber(), 1);
-		Prefs.set("LinearDistance.stepSize", step);
 		doApplyCalibration = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doApplyScale", doApplyCalibration);
+		step = Math.max((int) gd.getNextNumber(), 1);
+		Prefs.set("LinearDistance.stepSize", step);
+		doCalibrateStep = gd.getNextBoolean();
+		Prefs.set("LinearDistance.doCalibrateStep", doCalibrateStep);
 		doIterateAllImages = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		doExcludeEdges = gd.getNextBoolean();
@@ -96,17 +92,10 @@ public class LinearDistance implements PlugInFilter {
 		Prefs.set("LinearDistance.doCalculateWhite", doCalculateWhite);
 		doCalculateBlack = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doCalculateBlack", doCalculateBlack);
-		// doCalculateBlackAndWhite = gd.getNextBoolean();
-		// Prefs.set("LinearDistance.doCalculateBlackAndWhite",
-		// doCalculateBlackAndWhite);
 		doCalculateX = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doCalculateX", doCalculateX);
 		doCalculateY = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doCalculateY", doCalculateY);
-		// doCalculateXAndY = gd.getNextBoolean();
-		// Prefs.set("LinearDistance.doCalculateXAndY", doCalculateXAndY);
-		// doCalculateAll = gd.getNextBoolean();
-		// Prefs.set("LinearDistance.doCalculateAll", doCalculateAll);
 
 		return true;
 	}
@@ -121,7 +110,7 @@ public class LinearDistance implements PlugInFilter {
 		}
 	}
 
-	public void doAnalyzeImage(int[][] pixels, Boolean goX, int step, SummaryStatistics w, SummaryStatistics b,
+	public void doAnalyzeImage(int[][] pixels, Boolean goX, long step, SummaryStatistics w, SummaryStatistics b,
 			ImageProcessor overlay, double calib) {
 		int color = (goX) ? Color.RED.getRGB() : Color.GREEN.getRGB();
 		int count = 0;
@@ -182,6 +171,8 @@ public class LinearDistance implements PlugInFilter {
 		ImageProcessor ip = iplus.getProcessor();
 		ImageProcessor oix = null;
 		ImageProcessor oiy = null;
+		long lineDistanceX = step;
+		long lineDistanceY = step;
 		if (doShowOverlay) {
 			oix = new ColorProcessor(ip.getWidth(), ip.getHeight());
 			oiy = new ColorProcessor(ip.getWidth(), ip.getHeight());
@@ -206,21 +197,28 @@ public class LinearDistance implements PlugInFilter {
 		Double calx = 1.0d;
 		Double caly = 1.0d;
 		String unit = "px";
+
 		Calibration cal = iplus.getCalibration();
 		if (doApplyCalibration && cal.scaled()) {
 			calx = cal.pixelWidth;
 			caly = cal.pixelHeight;
+
 			unit = cal.getXUnit();
 			if (unit != cal.getYUnit()) {
 				unit += "/" + cal.getYUnit();
 			}
 		}
 
+		if (doCalibrateStep) {
+			lineDistanceX = Math.round((double) step / calx);
+			lineDistanceY = Math.round((double) step / caly);
+		}
+
 		if (doCalculateY) {
-			doAnalyzeImage(pixels, false, step, wdy, bdy, oiy, calx);
+			doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, calx);
 		}
 		if (doCalculateX) {
-			doAnalyzeImage(pixelsRotate, true, step, wdx, bdx, oix, caly);
+			doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, caly);
 		}
 
 		Collection<SummaryStatistics> colbothy = new ArrayList<SummaryStatistics>();
@@ -326,6 +324,11 @@ public class LinearDistance implements PlugInFilter {
 		}
 
 		rt.show("Linear Distances Results");
+	}
+
+	public int getRoundedInt(Double from) {
+		Long rnd = Math.round(from);
+		return Math.toIntExact(rnd);
 	}
 
 	public void showData(String name, double value, double scaledValue) {
