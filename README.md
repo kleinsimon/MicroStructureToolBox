@@ -19,7 +19,7 @@ Open one or more binary (black/white) images or binarize an image. Start the plu
 Option                         |  Description
 -------------------------------|----------------------------------------
 Apply image calibration        | Applies the set scale of each image to the results (by multiplying it)
-Step distance between measures | The number of pixels to skip between the analyzed lines
+Step distance between measures | The number of pixels/units to skip between the analyzed lines
 Calibrate step distance        | Skip units instead of pixels
 Measure all opened images      | When not selected, only the active image will be analyzed
 Standard Deviations            | Print standard deviations for all measurements
