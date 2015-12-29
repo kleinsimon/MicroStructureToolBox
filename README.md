@@ -7,7 +7,6 @@ Used for the calcuation of mean free paths in a two phase material.
 
 # Dependecies
 * [ImageJ](http://rsb.info.nih.gov/ij/) (tested with ImageJ 1.50e)
-* [Apache Commons Math](https://commons.apache.org/proper/commons-math/) (tested with commons-math3-3.5, included in the .jar file)
 
 # Installation
 Copy the File **LinearDistance_.jar** in the plugins/jars folder. 

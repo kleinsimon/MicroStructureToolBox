@@ -9,10 +9,9 @@
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import org.apache.commons.math3.stat.descriptive.AggregateSummaryStatistics;
-import org.apache.commons.math3.stat.descriptive.StatisticalSummaryValues;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import java.util.List;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.ImageRoi;
@@ -82,7 +81,7 @@ public class LinearDistance implements PlugInFilter {
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		doExcludeEdges = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
-		doShowOverlay = gd.getNextBoolean(); 
+		doShowOverlay = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
 		doCalculateStDev = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doCalculateStDev", doCalculateStDev);
@@ -110,7 +109,7 @@ public class LinearDistance implements PlugInFilter {
 		}
 	}
 
-	public void doAnalyzeImage(int[][] pixels, Boolean goX, long step, SummaryStatistics w, SummaryStatistics b,
+	public void doAnalyzeImage(int[][] pixels, Boolean goX, long step, List<Double> w, List<Double> b,
 			ImageProcessor overlay, double calib) {
 		int color = (goX) ? Color.RED.getRGB() : Color.GREEN.getRGB();
 		int count = 0;
@@ -136,9 +135,9 @@ public class LinearDistance implements PlugInFilter {
 				if ((now != last || isLast)) {
 					if (!(doExcludeEdges && onEdge)) {
 						if (last)
-							w.addValue((double) (count + 1) * calib);
+							w.add((double) (count + 1) * calib);
 						else
-							b.addValue((double) (count + 1) * calib);
+							b.add((double) (count + 1) * calib);
 						if (doShowOverlay && overlay != null) {
 							if ((doCalculateWhite && last) || (doCalculateBlack && !last)) {
 								for (int yi = 0; yi <= count; yi++) {
@@ -189,10 +188,10 @@ public class LinearDistance implements PlugInFilter {
 			for (int col = 0; col < pixels[row].length; col++)
 				pixelsRotate[col][row] = pixels[row][col];
 
-		SummaryStatistics wdy = new SummaryStatistics();
-		SummaryStatistics bdy = new SummaryStatistics();
-		SummaryStatistics wdx = new SummaryStatistics();
-		SummaryStatistics bdx = new SummaryStatistics();
+		List<Double> wdy = new ArrayList<Double>();
+		List<Double> bdy = new ArrayList<Double>();
+		List<Double> wdx = new ArrayList<Double>();
+		List<Double> bdx = new ArrayList<Double>();
 
 		Double calx = 1.0d;
 		Double caly = 1.0d;
@@ -221,28 +220,15 @@ public class LinearDistance implements PlugInFilter {
 			doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, caly);
 		}
 
-		Collection<SummaryStatistics> colbothy = new ArrayList<SummaryStatistics>();
-		Collection<SummaryStatistics> colbothx = new ArrayList<SummaryStatistics>();
-		Collection<SummaryStatistics> colall = new ArrayList<SummaryStatistics>();
-		Collection<SummaryStatistics> colwboth = new ArrayList<SummaryStatistics>();
-		Collection<SummaryStatistics> colbboth = new ArrayList<SummaryStatistics>();
-		colbothy.add(wdy);
-		colbothy.add(bdy);
-		colbothx.add(wdx);
-		colbothx.add(bdx);
-		colwboth.add(wdy);
-		colwboth.add(wdx);
-		colbboth.add(bdy);
-		colbboth.add(bdx);
-		colall.add(wdy);
-		colall.add(bdy);
-		colall.add(wdx);
-		colall.add(bdx);
-		StatisticalSummaryValues bothy = AggregateSummaryStatistics.aggregate(colbothy);
-		StatisticalSummaryValues bothx = AggregateSummaryStatistics.aggregate(colbothx);
-		StatisticalSummaryValues wboth = AggregateSummaryStatistics.aggregate(colwboth);
-		StatisticalSummaryValues bboth = AggregateSummaryStatistics.aggregate(colbboth);
-		StatisticalSummaryValues all = AggregateSummaryStatistics.aggregate(colall);
+		Stat bothy = new Stat(wdy, bdy);
+		Stat bothx = new Stat(wdx, bdx);
+		Stat all = new Stat(wdy, bdy, wdx, bdx);
+		Stat wboth = new Stat(wdy, wdx);
+		Stat bboth = new Stat(bdy, bdx);
+		Stat wy = new Stat(wdy);
+		Stat wx = new Stat(wdx);
+		Stat by = new Stat(bdy);
+		Stat bx = new Stat(bdx);
 
 		if (doShowOverlay) {
 			oix.copyBits(oiy, 0, 0, Blitter.ADD);
@@ -261,64 +247,65 @@ public class LinearDistance implements PlugInFilter {
 			rt.setValue("Calibration X/Y", row, calx.toString() + ((!calx.equals(caly)) ? "/" + caly.toString() : ""));
 		}
 		if (doCalculateWhite && doCalculateY) {
-			rt.setValue("Mean Dist. White y", row, wdy.getMean());
+			rt.setValue("Mean Dist. White y", row, wy.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. White y", row, wdy.getStandardDeviation());
+				rt.setValue("st.Dev. White y", row, wy.getStDev());
 			if (doCalculateNum)
-				rt.setValue("N White Stripes y", row, wdy.getN());
+				rt.setValue("N White Stripes y", row, wy.getN());
 		}
 		if (doCalculateBlack && doCalculateY) {
-			rt.setValue("Mean Dist. Black y", row, bdy.getMean());
+			rt.setValue("Mean Dist. Black y", row, by.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. Black y", row, bdy.getStandardDeviation());
+				rt.setValue("st.Dev. Black y", row, by.getStDev());
 			if (doCalculateNum)
-				rt.setValue("N Black Stripes y", row, bdy.getN());
+				rt.setValue("N Black Stripes y", row, by.getN());
 		}
 		if (doCalculateBlack && doCalculateWhite && doCalculateY) {
 			rt.setValue("Mean Dist. All y", row, bothy.getMean());
-			rt.setValue("st.Dev. All y", row, bothy.getStandardDeviation());
+			if (doCalculateStDev)
+				rt.setValue("st.Dev. All y", row, bothy.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N All Stripes y", row, bothy.getN());
 		}
 		if (doCalculateWhite && doCalculateX) {
-			rt.setValue("Mean Dist. White x", row, wdx.getMean());
+			rt.setValue("Mean Dist. White x", row, wx.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. White x", row, wdx.getStandardDeviation());
+				rt.setValue("st.Dev. White x", row, wx.getStDev());
 			if (doCalculateNum)
-				rt.setValue("N White Stripes x", row, wdx.getN());
+				rt.setValue("N White Stripes x", row, wx.getN());
 		}
 		if (doCalculateBlack && doCalculateX) {
-			rt.setValue("Mean Dist. Black x", row, bdx.getMean());
+			rt.setValue("Mean Dist. Black x", row, bx.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. Black x", row, bdx.getStandardDeviation());
+				rt.setValue("st.Dev. Black x", row, bx.getStDev());
 			if (doCalculateNum)
-				rt.setValue("N Black Stripes x", row, bdx.getN());
+				rt.setValue("N Black Stripes x", row, bx.getN());
 		}
 		if (doCalculateBlack && doCalculateWhite && doCalculateX) {
 			rt.setValue("Mean Dist. All x", row, bothx.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. All x", row, bothx.getStandardDeviation());
+				rt.setValue("st.Dev. All x", row, bothx.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N All Stripes x", row, bothx.getN());
 		}
 		if (doCalculateWhite && doCalculateX && doCalculateX) {
 			rt.setValue("Mean Dist. White x and y", row, wboth.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. White x and y", row, wboth.getStandardDeviation());
+				rt.setValue("st.Dev. White x and y", row, wboth.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N White Stripes x and y", row, wboth.getN());
 		}
 		if (doCalculateBlack && doCalculateX && doCalculateX) {
 			rt.setValue("Mean Dist. Black x and y", row, bboth.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. Black x and y", row, bboth.getStandardDeviation());
+				rt.setValue("st.Dev. Black x and y", row, bboth.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N Black Stripes x and y", row, bboth.getN());
 		}
 		if (doCalculateBlack && doCalculateWhite && doCalculateX && doCalculateX) {
 			rt.setValue("Mean Dist. All x and y", row, all.getMean());
 			if (doCalculateStDev)
-				rt.setValue("st.Dev. All x and y", row, all.getStandardDeviation());
+				rt.setValue("st.Dev. All x and y", row, all.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N All Stripes x and y", row, all.getN());
 		}
@@ -341,5 +328,98 @@ public class LinearDistance implements PlugInFilter {
 
 	public void showData(String name, double value) {
 		showData(name, value, 0);
+	}
+
+	class Stat {
+		private Double mean = null;
+		private Double sum = null;
+		private Double stD = null;
+		private Long num = null;
+		private List<Collection<Double>> values = new ArrayList<Collection<Double>>();
+
+		public Stat() {
+
+		}
+
+		public Stat(List<Double>... lists) {
+			addList(lists);
+		}
+
+		public void invalidate() {
+			mean = stD = sum = null;
+			num = null;
+		}
+
+		public void addList(Collection<Double>... lists) {
+			for (Collection<Double> l : lists)
+				values.add(l);
+			invalidate();
+		}
+
+		public void clearLists() {
+			values.clear();
+			invalidate();
+		}
+
+		public void removeList(Collection<Double>... lists) {
+			for (Collection<Double> l : lists)
+				values.remove(l);
+			invalidate();
+		}
+
+		public long getN() {
+			if (num == null) {
+				num = 0l;
+				for (Collection<Double> lst : values) {
+					if (lst.isEmpty())
+						continue;
+					num += lst.size();
+				}
+			}
+
+			return num;
+		}
+
+		public double getSum() {
+			if (sum == null) {
+				sum = 0d;
+				for (Collection<Double> lst : values) {
+					if (lst.isEmpty())
+						continue;
+					for (double n : lst) {
+						sum += n;
+					}
+				}
+			}
+
+			return sum;
+		}
+
+		public double getMean() {
+			if (mean == null) {
+				sum = getSum();
+				num = getN();
+				mean = sum / (double) num;
+			}
+
+			return mean;
+		}
+
+		public double getStDev() {
+			if (stD == null) {
+				mean = getMean();
+				num = getN();
+				Double dst = 0d;
+				for (Collection<Double> lst : values) {
+					if (lst.isEmpty())
+						continue;
+					for (double x : lst) {
+						dst += Math.pow((x - mean), 2);
+					}
+				}
+				stD = Math.sqrt(dst / (double) num);
+			}
+			return stD;
+		}
 	}
 }
