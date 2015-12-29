@@ -2,7 +2,7 @@
 //=====================================================
 //      Name:           LinearDistance
 //      Project:        Measures the linear distance between binary inversions in x and y direction
-//      Version:        0.1
+//      Version:        0.2
 //      Author:         Simon Klein, simon.klein@simonklein.de
 //      Date:           24.11.2015
 //      Comment:		Buildfile taken from Patrick Pirrotte       
