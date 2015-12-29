@@ -10,6 +10,7 @@ Used for the calcuation of mean free paths in a two phase material.
 
 # Installation
 Copy the File **LinearDistance_.jar** in the plugins/jars folder. 
+When using Fiji, you can simply add the update site **LinearDistance**.
 
 # Usage
 Open one or more binary (black/white) images or binarize an image. Start the plugin by selecting "Plugins>Analyze>Measure linear distances" and select the results you want to obtain. ~~**All given lengths will be in pixels**, no scale is applied~~.
