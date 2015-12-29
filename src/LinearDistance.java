@@ -82,7 +82,7 @@ public class LinearDistance implements PlugInFilter {
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		doExcludeEdges = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
-		doShowOverlay = gd.getNextBoolean();
+		doShowOverlay = gd.getNextBoolean(); 
 		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
 		doCalculateStDev = gd.getNextBoolean();
 		Prefs.set("LinearDistance.doCalculateStDev", doCalculateStDev);
