@@ -9,8 +9,6 @@
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
@@ -46,7 +44,7 @@ public class LinearDistance implements PlugInFilter {
 		if (imp != null && !showDialog())
 			return DONE;
 		rt.reset();
-		return DOES_8G + DOES_STACKS + SUPPORTS_MASKING;
+		return DOES_8G;
 	}
 
 	boolean showDialog() {
@@ -62,39 +60,51 @@ public class LinearDistance implements PlugInFilter {
 		gd.addMessage("Activate the results you want to gather");
 		gd.addCheckbox("Standard Deviations  ", doCalculateStDev);
 		gd.addCheckbox("Numbers  ", doCalculateNum);
+		gd.addMessage("------------");
 		gd.addCheckbox("White Phase  ", doCalculateWhite);
 		gd.addCheckbox("Black Phase  ", doCalculateBlack);
 		gd.addCheckbox("X Direction  ", doCalculateX);
 		gd.addCheckbox("Y Direction  ", doCalculateY);
+		gd.addMessage("Summarize");
+		gd.addCheckbox("Both Phases  ", doCalculateBlackAndWhite);
+		gd.addCheckbox("X and Y  ", doCalculateXAndY);
+		gd.addCheckbox("Both Phases, X and Y  ", doCalculateAll);
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
 		doApplyCalibration = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doApplyScale", doApplyCalibration);
 		step = Math.max((int) gd.getNextNumber(), 1);
-		Prefs.set("LinearDistance.stepSize", step);
 		doCalibrateStep = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doCalibrateStep", doCalibrateStep);
 		doIterateAllImages = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		doExcludeEdges = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
 		doShowOverlay = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
 		doCalculateStDev = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doCalculateStDev", doCalculateStDev);
 		doCalculateNum = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doCalculateNum", doCalculateNum);
 		doCalculateWhite = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doCalculateWhite", doCalculateWhite);
 		doCalculateBlack = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doCalculateBlack", doCalculateBlack);
 		doCalculateX = gd.getNextBoolean();
-		Prefs.set("LinearDistance.doCalculateX", doCalculateX);
 		doCalculateY = gd.getNextBoolean();
+		doCalculateBlackAndWhite = gd.getNextBoolean();
+		doCalculateXAndY = gd.getNextBoolean();
+		doCalculateAll = gd.getNextBoolean();
+
+		Prefs.set("LinearDistance.doApplyScale", doApplyCalibration);
+		Prefs.set("LinearDistance.stepSize", step);
+		Prefs.set("LinearDistance.doCalibrateStep", doCalibrateStep);
+		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
+		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
+		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
+		Prefs.set("LinearDistance.doCalculateStDev", doCalculateStDev);
+		Prefs.set("LinearDistance.doCalculateNum", doCalculateNum);
+		Prefs.set("LinearDistance.doCalculateWhite", doCalculateWhite);
+		Prefs.set("LinearDistance.doCalculateBlack", doCalculateBlack);
+		Prefs.set("LinearDistance.doCalculateX", doCalculateX);
 		Prefs.set("LinearDistance.doCalculateY", doCalculateY);
+		Prefs.set("LinearDistance.doCalculateBlackAndWhite", doCalculateBlackAndWhite);
+		Prefs.set("LinearDistance.doCalculateXAndY", doCalculateXAndY);
+		Prefs.set("LinearDistance.doCalculateAll", doCalculateAll);
 
 		return true;
 	}
@@ -213,12 +223,8 @@ public class LinearDistance implements PlugInFilter {
 			lineDistanceY = Math.round((double) step / caly);
 		}
 
-		if (doCalculateY) {
-			doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, calx);
-		}
-		if (doCalculateX) {
-			doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, caly);
-		}
+		doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, calx);
+		doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, caly);
 
 		Stat bothy = new Stat(wdy, bdy);
 		Stat bothx = new Stat(wdx, bdx);
@@ -288,21 +294,21 @@ public class LinearDistance implements PlugInFilter {
 			if (doCalculateNum)
 				rt.setValue("N All Stripes x", row, bothx.getN());
 		}
-		if (doCalculateWhite && doCalculateX && doCalculateX) {
+		if (doCalculateWhite && doCalculateXAndY) {
 			rt.setValue("Mean Dist. White x and y", row, wboth.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. White x and y", row, wboth.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N White Stripes x and y", row, wboth.getN());
 		}
-		if (doCalculateBlack && doCalculateX && doCalculateX) {
+		if (doCalculateBlack && doCalculateXAndY) {
 			rt.setValue("Mean Dist. Black x and y", row, bboth.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. Black x and y", row, bboth.getStDev());
 			if (doCalculateNum)
 				rt.setValue("N Black Stripes x and y", row, bboth.getN());
 		}
-		if (doCalculateBlack && doCalculateWhite && doCalculateX && doCalculateX) {
+		if (doCalculateAll) {
 			rt.setValue("Mean Dist. All x and y", row, all.getMean());
 			if (doCalculateStDev)
 				rt.setValue("st.Dev. All x and y", row, all.getStDev());
@@ -328,98 +334,5 @@ public class LinearDistance implements PlugInFilter {
 
 	public void showData(String name, double value) {
 		showData(name, value, 0);
-	}
-
-	class Stat {
-		private Double mean = null;
-		private Double sum = null;
-		private Double stD = null;
-		private Long num = null;
-		private List<Collection<Double>> values = new ArrayList<Collection<Double>>();
-
-		public Stat() {
-
-		}
-
-		public Stat(List<Double>... lists) {
-			addList(lists);
-		}
-
-		public void invalidate() {
-			mean = stD = sum = null;
-			num = null;
-		}
-
-		public void addList(Collection<Double>... lists) {
-			for (Collection<Double> l : lists)
-				values.add(l);
-			invalidate();
-		}
-
-		public void clearLists() {
-			values.clear();
-			invalidate();
-		}
-
-		public void removeList(Collection<Double>... lists) {
-			for (Collection<Double> l : lists)
-				values.remove(l);
-			invalidate();
-		}
-
-		public long getN() {
-			if (num == null) {
-				num = 0l;
-				for (Collection<Double> lst : values) {
-					if (lst.isEmpty())
-						continue;
-					num += lst.size();
-				}
-			}
-
-			return num;
-		}
-
-		public double getSum() {
-			if (sum == null) {
-				sum = 0d;
-				for (Collection<Double> lst : values) {
-					if (lst.isEmpty())
-						continue;
-					for (double n : lst) {
-						sum += n;
-					}
-				}
-			}
-
-			return sum;
-		}
-
-		public double getMean() {
-			if (mean == null) {
-				sum = getSum();
-				num = getN();
-				mean = sum / (double) num;
-			}
-
-			return mean;
-		}
-
-		public double getStDev() {
-			if (stD == null) {
-				mean = getMean();
-				num = getN();
-				Double dst = 0d;
-				for (Collection<Double> lst : values) {
-					if (lst.isEmpty())
-						continue;
-					for (double x : lst) {
-						dst += Math.pow((x - mean), 2);
-					}
-				}
-				stD = Math.sqrt(dst / (double) num);
-			}
-			return stD;
-		}
 	}
 }
