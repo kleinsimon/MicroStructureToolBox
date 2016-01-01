@@ -2,7 +2,7 @@
 //=====================================================
 //      Name:           LinearDistance
 //      Project:        Measures the linear distance between binary inversions in x and y direction
-//      Version:        0.3
+//      Version:        0.3.2
 //      Author:         Simon Klein, simon.klein@simonklein.de
 //      Date:           24.11.2015
 //      Comment:		Buildfile taken from Patrick Pirrotte       
@@ -25,7 +25,7 @@ public class LinearDistance implements PlugInFilter {
 	private String[] measurementsTable = { "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y",
 			"Black and White X", "Black and White Y", "All" };
 	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
-	private int step;
+	private Double step;
 	private boolean doApplyCalibration, doCalibrateStep, doIterateAllImages, doExcludeEdges, doShowOverlay;
 	private boolean[] doMeasurements;
 	private boolean[] doResults;
@@ -39,14 +39,14 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	boolean showDialog() {
-		step = Prefs.getInt(".LinearDistance.stepSize", 1);
-		doApplyCalibration = Prefs.getBoolean(".LinearDistance.doApplyCalibration", true);
-		doCalibrateStep = Prefs.getBoolean(".LinearDistance.doCalibrateStep", false);
-		doIterateAllImages = Prefs.getBoolean(".LinearDistance.doIterateAllImages", true);
-		doExcludeEdges = Prefs.getBoolean(".LinearDistance.doExcludeEdges", true);
-		doShowOverlay = Prefs.getBoolean(".LinearDistance.doShowOverlay", true);
-		doMeasurements = StringToBoolean(Prefs.getString(".LinearDistance.doMeasurements"), measurementsTable.length);
-		doResults = StringToBoolean(Prefs.getString(".LinearDistance.doResults"), resultsTable.length);
+		step = Prefs.get("LinearDistance.stepSize", 1);
+		doApplyCalibration = Prefs.get("LinearDistance.doApplyCalibration", true);
+		doCalibrateStep = Prefs.get("LinearDistance.doCalibrateStep", false);
+		doIterateAllImages = Prefs.get("LinearDistance.doIterateAllImages", true);
+		doExcludeEdges = Prefs.get("LinearDistance.doExcludeEdges", true);
+		doShowOverlay = Prefs.get("LinearDistance.doShowOverlay", true);
+		doMeasurements = StringToBoolean(Prefs.get("LinearDistance.doMeasurements",""), measurementsTable.length);
+		doResults = StringToBoolean(Prefs.get("LinearDistance.doResults",""), resultsTable.length);
 
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Linear Distances Plugin, created by Simon Klein");
@@ -68,7 +68,7 @@ public class LinearDistance implements PlugInFilter {
 			return false;
 
 		doApplyCalibration = gd.getNextBoolean();
-		step = Math.max((int) gd.getNextNumber(), 1);
+		step = Math.max(gd.getNextNumber(), 1d);
 		doCalibrateStep = gd.getNextBoolean();
 		doIterateAllImages = gd.getNextBoolean();
 		doExcludeEdges = gd.getNextBoolean();
@@ -165,8 +165,8 @@ public class LinearDistance implements PlugInFilter {
 		ImageProcessor ip = iplus.getProcessor();
 		ImageProcessor oix = null;
 		ImageProcessor oiy = null;
-		long lineDistanceX = step;
-		long lineDistanceY = step;
+		long lineDistanceX = step.intValue();
+		long lineDistanceY = step.intValue();
 		if (doShowOverlay) {
 			oix = new ColorProcessor(ip.getWidth(), ip.getHeight());
 			oiy = new ColorProcessor(ip.getWidth(), ip.getHeight());
@@ -204,15 +204,16 @@ public class LinearDistance implements PlugInFilter {
 		}
 
 		if (doCalibrateStep) {
-			lineDistanceX = Math.round((double) step / calx);
-			lineDistanceY = Math.round((double) step / caly);
+			lineDistanceX = Math.round((Double) step / calx);
+			lineDistanceY = Math.round((Double) step / caly);
 		}
 
-		doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, calx);
-		doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, caly);
+		doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, caly);
+		doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, calx);
 
-		Stat[] Stats = { new Stat(wdy, bdy), new Stat(wdx, bdx), new Stat(wdy, bdy, wdx, bdx), new Stat(wdy, wdx),
-				new Stat(bdy, bdx), new Stat(wdy), new Stat(wdx), new Stat(bdy), new Stat(bdx) };
+		//{ "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y", "Black and White X", "Black and White Y", "All" }
+		Stat[] Stats = { new Stat(wdx), new Stat(wdy), new Stat(wdx, wdy), new Stat(bdx),
+				new Stat(bdy), new Stat(bdx, bdy), new Stat(wdx, bdx), new Stat(wdy, bdy), new Stat(wdx, bdy) };
 
 		if (doShowOverlay) {
 			oix.copyBits(oiy, 0, 0, Blitter.ADD);
