@@ -43,8 +43,7 @@ class Stat {
 			values.remove(l);
 		invalidate();
 	}
-
-	public int getN() {
+	public int getNum() {
 		if (num == null) {
 			num = 0;
 			for (Collection<Double> lst : values) {
@@ -73,15 +72,17 @@ class Stat {
 	public double getMean() {
 		if (mean == null) {
 			sum = getSum();
-			num = getN();
+			num = getNum();
 			mean = sum / (double) num;
 		}
 		return mean;
 	}
 
 	public double getMedian() {
+		if (getNum() == 0)
+			return 0d;
 		if (median == null) {
-			Double[] bigList = new Double[getN()];
+			Double[] bigList = new Double[getNum()];
 			int i = 0;
 			for (Collection<Double> list : values) {
 				for (Double n : list) {
@@ -107,7 +108,7 @@ class Stat {
 	public double getVariance() {
 		if (variance == null) {
 			mean = getMean();
-			num = getN();
+			num = getNum();
 			Double dst = 0d;
 			for (Collection<Double> lst : values) {
 				if (lst.isEmpty())
@@ -127,5 +128,25 @@ class Stat {
 			stD = Math.sqrt(variance);
 		}
 		return stD;
+	}
+	//	String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
+
+	public double getFormattedValue(int action){
+		switch (action) {
+			case 0:
+				return getMean();
+			case 1:
+				return getMedian();
+			case 2:
+				return getSum();
+			case 3:
+				return getVariance();
+			case 4:
+				return getStDev();
+			case 5:
+				return getNum();
+			default:
+				return 0d;
+		}
 	}
 }

@@ -2,7 +2,7 @@
 //=====================================================
 //      Name:           LinearDistance
 //      Project:        Measures the linear distance between binary inversions in x and y direction
-//      Version:        0.2
+//      Version:        0.3
 //      Author:         Simon Klein, simon.klein@simonklein.de
 //      Date:           24.11.2015
 //      Comment:		Buildfile taken from Patrick Pirrotte       
@@ -22,23 +22,14 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
 public class LinearDistance implements PlugInFilter {
-	static int step = Prefs.getInt("LinearDistance.stepSize", 1);
-	static boolean doApplyCalibration = Prefs.getBoolean("LinearDistance.doApplyCalibration", true);
-	static boolean doCalibrateStep = Prefs.getBoolean("LinearDistance.doCalibrateStep", false);
-	static boolean doIterateAllImages = Prefs.getBoolean("LinearDistance.doIterateAllImages", true);
-	static boolean doExcludeEdges = Prefs.getBoolean("LinearDistance.doExcludeEdges", true);
-	static boolean doShowOverlay = Prefs.getBoolean("LinearDistance.doShowOverlay", true);
-	static boolean doCalculateStDev = Prefs.getBoolean("LinearDistance.doCalculateStDev", true);
-	static boolean doCalculateNum = Prefs.getBoolean("LinearDistance.doCalculateNum", true);
-	static boolean doCalculateWhite = Prefs.getBoolean("LinearDistance.doCalculateWhite", true);
-	static boolean doCalculateBlack = Prefs.getBoolean("LinearDistance.doCalculateBlack", true);
-	static boolean doCalculateBlackAndWhite = Prefs.getBoolean("LinearDistance.doCalculateBlackAndWhite", true);
-	static boolean doCalculateX = Prefs.getBoolean("LinearDistance.doCalculateX", true);
-	static boolean doCalculateY = Prefs.getBoolean("LinearDistance.doCalculateY", true);
-	static boolean doCalculateXAndY = Prefs.getBoolean("LinearDistance.doCalculateXAndY", true);
-	static boolean doCalculateAll = Prefs.getBoolean("LinearDistance.doCalculateAll", true);
-
-	ResultsTable rt = new ResultsTable();
+	private String[] measurementsTable = { "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y",
+			"Black and White X", "Black and White Y", "All" };
+	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
+	private int step;
+	private boolean doApplyCalibration, doCalibrateStep, doIterateAllImages, doExcludeEdges, doShowOverlay;
+	private boolean[] doMeasurements;
+	private boolean[] doResults;
+	private ResultsTable rt = new ResultsTable();
 
 	public int setup(String arg, ImagePlus imp) {
 		if (imp != null && !showDialog())
@@ -48,6 +39,15 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	boolean showDialog() {
+		step = Prefs.getInt(".LinearDistance.stepSize", 1);
+		doApplyCalibration = Prefs.getBoolean(".LinearDistance.doApplyCalibration", true);
+		doCalibrateStep = Prefs.getBoolean(".LinearDistance.doCalibrateStep", false);
+		doIterateAllImages = Prefs.getBoolean(".LinearDistance.doIterateAllImages", true);
+		doExcludeEdges = Prefs.getBoolean(".LinearDistance.doExcludeEdges", true);
+		doShowOverlay = Prefs.getBoolean(".LinearDistance.doShowOverlay", true);
+		doMeasurements = StringToBoolean(Prefs.getString(".LinearDistance.doMeasurements"), measurementsTable.length);
+		doResults = StringToBoolean(Prefs.getString(".LinearDistance.doResults"), resultsTable.length);
+
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Linear Distances Plugin, created by Simon Klein");
 		gd.addMessage("This plug-in calculates the linear distances in x and y directions for binary images.");
@@ -57,18 +57,11 @@ public class LinearDistance implements PlugInFilter {
 		gd.addCheckbox("Measure all opened Images", doIterateAllImages);
 		gd.addCheckbox("Exclude stripes cut by Edges", doExcludeEdges);
 		gd.addCheckbox("Show measured pixels as overlay", doShowOverlay);
-		gd.addMessage("Activate the results you want to gather");
-		gd.addCheckbox("Standard Deviations  ", doCalculateStDev);
-		gd.addCheckbox("Numbers  ", doCalculateNum);
-		gd.addMessage("------------");
-		gd.addCheckbox("White Phase  ", doCalculateWhite);
-		gd.addCheckbox("Black Phase  ", doCalculateBlack);
-		gd.addCheckbox("X Direction  ", doCalculateX);
-		gd.addCheckbox("Y Direction  ", doCalculateY);
-		gd.addMessage("Summarize");
-		gd.addCheckbox("Both Phases  ", doCalculateBlackAndWhite);
-		gd.addCheckbox("X and Y  ", doCalculateXAndY);
-		gd.addCheckbox("Both Phases, X and Y  ", doCalculateAll);
+
+		gd.addMessage("Measurements");
+		gd.addCheckboxGroup(2, 5, measurementsTable, doMeasurements);
+		gd.addMessage("Results");
+		gd.addCheckboxGroup(1, 6, resultsTable, doResults);
 
 		gd.showDialog();
 		if (gd.wasCanceled())
@@ -80,15 +73,12 @@ public class LinearDistance implements PlugInFilter {
 		doIterateAllImages = gd.getNextBoolean();
 		doExcludeEdges = gd.getNextBoolean();
 		doShowOverlay = gd.getNextBoolean();
-		doCalculateStDev = gd.getNextBoolean();
-		doCalculateNum = gd.getNextBoolean();
-		doCalculateWhite = gd.getNextBoolean();
-		doCalculateBlack = gd.getNextBoolean();
-		doCalculateX = gd.getNextBoolean();
-		doCalculateY = gd.getNextBoolean();
-		doCalculateBlackAndWhite = gd.getNextBoolean();
-		doCalculateXAndY = gd.getNextBoolean();
-		doCalculateAll = gd.getNextBoolean();
+		for (int i = 0; i < doMeasurements.length; i++) {
+			doMeasurements[i] = gd.getNextBoolean();
+		}
+		for (int i = 0; i < doResults.length; i++) {
+			doResults[i] = gd.getNextBoolean();
+		}
 
 		Prefs.set("LinearDistance.doApplyScale", doApplyCalibration);
 		Prefs.set("LinearDistance.stepSize", step);
@@ -96,15 +86,8 @@ public class LinearDistance implements PlugInFilter {
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
 		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
-		Prefs.set("LinearDistance.doCalculateStDev", doCalculateStDev);
-		Prefs.set("LinearDistance.doCalculateNum", doCalculateNum);
-		Prefs.set("LinearDistance.doCalculateWhite", doCalculateWhite);
-		Prefs.set("LinearDistance.doCalculateBlack", doCalculateBlack);
-		Prefs.set("LinearDistance.doCalculateX", doCalculateX);
-		Prefs.set("LinearDistance.doCalculateY", doCalculateY);
-		Prefs.set("LinearDistance.doCalculateBlackAndWhite", doCalculateBlackAndWhite);
-		Prefs.set("LinearDistance.doCalculateXAndY", doCalculateXAndY);
-		Prefs.set("LinearDistance.doCalculateAll", doCalculateAll);
+		Prefs.set("LinearDistance.doMeasurements", BooleanToString(doMeasurements));
+		Prefs.set("LinearDistance.doResults", BooleanToString(doResults));
 
 		return true;
 	}
@@ -117,6 +100,10 @@ public class LinearDistance implements PlugInFilter {
 		} else {
 			analyzeImage(ij.IJ.getImage());
 		}
+	}
+
+	public void showMessage(String message) {
+		ij.gui.MessageDialog e = new ij.gui.MessageDialog(ij.WindowManager.getCurrentWindow(), "", message);
 	}
 
 	public void doAnalyzeImage(int[][] pixels, Boolean goX, long step, List<Double> w, List<Double> b,
@@ -149,14 +136,12 @@ public class LinearDistance implements PlugInFilter {
 						else
 							b.add((double) (count + 1) * calib);
 						if (doShowOverlay && overlay != null) {
-							if ((doCalculateWhite && last) || (doCalculateBlack && !last)) {
-								for (int yi = 0; yi <= count; yi++) {
-									int ny = Math.max(0, y - yi - 1);
-									if (goX)
-										overlay.set(ny, x, color);
-									else
-										overlay.set(x, ny, color);
-								}
+							for (int yi = 0; yi <= count; yi++) {
+								int ny = Math.max(0, y - yi - 1);
+								if (goX)
+									overlay.set(ny, x, color);
+								else
+									overlay.set(x, ny, color);
 							}
 						}
 					}
@@ -226,15 +211,8 @@ public class LinearDistance implements PlugInFilter {
 		doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, calx);
 		doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, caly);
 
-		Stat bothy = new Stat(wdy, bdy);
-		Stat bothx = new Stat(wdx, bdx);
-		Stat all = new Stat(wdy, bdy, wdx, bdx);
-		Stat wboth = new Stat(wdy, wdx);
-		Stat bboth = new Stat(bdy, bdx);
-		Stat wy = new Stat(wdy);
-		Stat wx = new Stat(wdx);
-		Stat by = new Stat(bdy);
-		Stat bx = new Stat(bdx);
+		Stat[] Stats = { new Stat(wdy, bdy), new Stat(wdx, bdx), new Stat(wdy, bdy, wdx, bdx), new Stat(wdy, wdx),
+				new Stat(bdy, bdx), new Stat(wdy), new Stat(wdx), new Stat(bdy), new Stat(bdx) };
 
 		if (doShowOverlay) {
 			oix.copyBits(oiy, 0, 0, Blitter.ADD);
@@ -252,68 +230,21 @@ public class LinearDistance implements PlugInFilter {
 		if (doApplyCalibration && cal.scaled()) {
 			rt.setValue("Calibration X/Y", row, calx.toString() + ((!calx.equals(caly)) ? "/" + caly.toString() : ""));
 		}
-		if (doCalculateWhite && doCalculateY) {
-			rt.setValue("Mean Dist. White y", row, wy.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. White y", row, wy.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N White Stripes y", row, wy.getN());
-		}
-		if (doCalculateBlack && doCalculateY) {
-			rt.setValue("Mean Dist. Black y", row, by.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. Black y", row, by.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N Black Stripes y", row, by.getN());
-		}
-		if (doCalculateBlack && doCalculateWhite && doCalculateY) {
-			rt.setValue("Mean Dist. All y", row, bothy.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. All y", row, bothy.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N All Stripes y", row, bothy.getN());
-		}
-		if (doCalculateWhite && doCalculateX) {
-			rt.setValue("Mean Dist. White x", row, wx.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. White x", row, wx.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N White Stripes x", row, wx.getN());
-		}
-		if (doCalculateBlack && doCalculateX) {
-			rt.setValue("Mean Dist. Black x", row, bx.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. Black x", row, bx.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N Black Stripes x", row, bx.getN());
-		}
-		if (doCalculateBlack && doCalculateWhite && doCalculateX) {
-			rt.setValue("Mean Dist. All x", row, bothx.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. All x", row, bothx.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N All Stripes x", row, bothx.getN());
-		}
-		if (doCalculateWhite && doCalculateXAndY) {
-			rt.setValue("Mean Dist. White x and y", row, wboth.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. White x and y", row, wboth.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N White Stripes x and y", row, wboth.getN());
-		}
-		if (doCalculateBlack && doCalculateXAndY) {
-			rt.setValue("Mean Dist. Black x and y", row, bboth.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. Black x and y", row, bboth.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N Black Stripes x and y", row, bboth.getN());
-		}
-		if (doCalculateAll) {
-			rt.setValue("Mean Dist. All x and y", row, all.getMean());
-			if (doCalculateStDev)
-				rt.setValue("st.Dev. All x and y", row, all.getStDev());
-			if (doCalculateNum)
-				rt.setValue("N All Stripes x and y", row, all.getN());
+		String rName, mName, cName;
+		Double rValue;
+
+		for (int mi = 0; mi < doMeasurements.length; mi++) {
+			if (!doMeasurements[mi])
+				continue;
+			mName = measurementsTable[mi];
+			for (int ri = 0; ri < doResults.length; ri++) {
+				if (!doResults[ri])
+					continue;
+				rName = resultsTable[ri];
+				cName = String.format("%s %s", mName, rName);
+				rValue = Stats[mi].getFormattedValue(ri);
+				rt.setValue(cName, row, rValue);
+			}
 		}
 
 		rt.show("Linear Distances Results");
@@ -322,6 +253,25 @@ public class LinearDistance implements PlugInFilter {
 	public int getRoundedInt(Double from) {
 		Long rnd = Math.round(from);
 		return Math.toIntExact(rnd);
+	}
+
+	public String BooleanToString(boolean[] bools) {
+		String ret = "";
+		for (boolean b : bools)
+			ret += (b == true) ? "1" : "0";
+		return ret;
+	}
+
+	public boolean[] StringToBoolean(String str, int outLength) {
+		boolean[] ret = new boolean[outLength];
+		if (str == null)
+			return ret;
+		if (str.length() == outLength) {
+			for (int i = 0; i < str.length(); i++) {
+				ret[i] = (str.charAt(i) == '1') ? true : false;
+			}
+		}
+		return ret;
 	}
 
 	public void showData(String name, double value, double scaledValue) {
