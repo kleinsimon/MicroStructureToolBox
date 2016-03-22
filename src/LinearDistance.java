@@ -1,8 +1,8 @@
 
 //=====================================================
-//      Name:           LinearDistance
+//      Name:           LinearDistance 2 Phase Binary
 //      Project:        Measures the linear distance between binary inversions in x and y direction
-//      Version:        0.3.2
+//      Version:        0.3.3
 //      Author:         Simon Klein, simon.klein@simonklein.de
 //      Date:           24.11.2015
 //      Comment:		Buildfile taken from Patrick Pirrotte       
@@ -45,12 +45,13 @@ public class LinearDistance implements PlugInFilter {
 		doIterateAllImages = Prefs.get("LinearDistance.doIterateAllImages", true);
 		doExcludeEdges = Prefs.get("LinearDistance.doExcludeEdges", true);
 		doShowOverlay = Prefs.get("LinearDistance.doShowOverlay", true);
-		doMeasurements = StringToBoolean(Prefs.get("LinearDistance.doMeasurements",""), measurementsTable.length);
-		doResults = StringToBoolean(Prefs.get("LinearDistance.doResults",""), resultsTable.length);
+		doMeasurements = Tools.StringToBoolean(Prefs.get("LinearDistance.doMeasurements",""), measurementsTable.length);
+		doResults = Tools.StringToBoolean(Prefs.get("LinearDistance.doResults",""), resultsTable.length);
 
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Linear Distances Plugin, created by Simon Klein");
-		gd.addMessage("This plug-in calculates the linear distances in x and y directions for binary images.");
+
+		gd.addMessage("This plug-in measures the linear distances in x and y directions for binary images.");
 		gd.addCheckbox("Apply image calbration", doApplyCalibration);
 		gd.addNumericField("Step distance between measures in pixels/units", step, 1);
 		gd.addCheckbox("Step distance in units", doCalibrateStep);
@@ -86,9 +87,9 @@ public class LinearDistance implements PlugInFilter {
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
 		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
-		Prefs.set("LinearDistance.doMeasurements", BooleanToString(doMeasurements));
-		Prefs.set("LinearDistance.doResults", BooleanToString(doResults));
-
+		Prefs.set("LinearDistance.doMeasurements", Tools.BooleanToString(doMeasurements));
+		Prefs.set("LinearDistance.doResults", Tools.BooleanToString(doResults));
+		Prefs.savePreferences();
 		return true;
 	}
 
@@ -249,30 +250,6 @@ public class LinearDistance implements PlugInFilter {
 		}
 
 		rt.show("Linear Distances Results");
-	}
-
-	public int getRoundedInt(Double from) {
-		Long rnd = Math.round(from);
-		return Math.toIntExact(rnd);
-	}
-
-	public String BooleanToString(boolean[] bools) {
-		String ret = "";
-		for (boolean b : bools)
-			ret += (b == true) ? "1" : "0";
-		return ret;
-	}
-
-	public boolean[] StringToBoolean(String str, int outLength) {
-		boolean[] ret = new boolean[outLength];
-		if (str == null)
-			return ret;
-		if (str.length() == outLength) {
-			for (int i = 0; i < str.length(); i++) {
-				ret[i] = (str.charAt(i) == '1') ? true : false;
-			}
-		}
-		return ret;
 	}
 
 	public void showData(String name, double value, double scaledValue) {
