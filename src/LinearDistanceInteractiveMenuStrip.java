@@ -66,12 +66,12 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 	}
 
 	private void clear() {
-		if (confirm("Realy clear marks?"))
+		if (confirm("Really clear marks?"))
 			parentHandle.clear();
 	}
 
 	public boolean remove() {
-		if (confirm("Realy exit interactive mode?")) {
+		if (confirm("Cancel measurement? THis will delete all marks.")) {
 			parentHandle.remove();
 			return true;
 		}

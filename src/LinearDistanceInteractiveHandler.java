@@ -10,8 +10,10 @@ import ij.Prefs;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageRoi;
+import ij.gui.Overlay;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
+import ij.process.Blitter;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
@@ -32,6 +34,7 @@ public class LinearDistanceInteractiveHandler {
 	private boolean[] doResults;
 	public LinearDistanceInteractiveMouseHandler mouseActionListener;
 	private ResultsTable rt;
+	Overlay ovl;
 
 	public LinearDistanceInteractiveHandler(int lineDistancePx, int offSetPx, int markLenPx, Boolean dirY,
 			ImagePlus image, String[] resTable, boolean[] doRes, ResultsTable restable,
@@ -59,12 +62,16 @@ public class LinearDistanceInteractiveHandler {
 		ImageRoi roi = new ImageRoi(0, 0, overlay);
 		roi.setName(iplus.getShortTitle() + " measured stripes");
 		roi.setOpacity(1d);
-		iplus.setOverlay(roi, Color.RED, 1, Color.RED);
-		iplus.lockSilently();
+		//roi.setZeroTransparent(true);
+		
+		ovl = new Overlay(roi);
+		iplus.setOverlay(ovl);
+		//iplus.setRoi(roi);
 
 		ij.IJ.setTool(12);
 		icanv.disablePopupMenu(true);
 		drawOverlay();
+		iplus.draw();
 	}
 
 	public void updateSize() {
@@ -204,8 +211,7 @@ public class LinearDistanceInteractiveHandler {
 	}
 
 	public void drawOverlay() {
-		overlay.setColor(Color.TRANSLUCENT);
-		overlay.fill();
+		overlay.copyBits(ip, 0, 0, Blitter.COPY);
 		overlay.setColor(Color.RED);
 		int pxls = (directionY) ? overlay.getWidth() : overlay.getHeight();
 		int line = 0;
@@ -237,7 +243,7 @@ public class LinearDistanceInteractiveHandler {
 			line++;
 		}
 		// icanv.setCursor(Cursor.CURSOR_NONE);
-		iplus.updateAndDraw();
+		iplus.draw();
 	}
 
 	public int getNextLine(Point Cursor) {

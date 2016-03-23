@@ -2,8 +2,9 @@
 public class Tools {
 
 	public static int getRoundedInt(Double from) {
-		Long rnd = Math.round(from);
-		return Math.toIntExact(rnd);
+		//Long rnd = Math.round(from);
+		//return Math.toIntExact(rnd);
+		return (int) (from + 0.5);
 	}
 
 	public static String BooleanToString(boolean[] bools) {
