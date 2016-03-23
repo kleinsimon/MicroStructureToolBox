@@ -62,11 +62,11 @@ public class LinearDistanceInteractiveHandler {
 		ImageRoi roi = new ImageRoi(0, 0, overlay);
 		roi.setName(iplus.getShortTitle() + " measured stripes");
 		roi.setOpacity(1d);
-		//roi.setZeroTransparent(true);
-		
+		// roi.setZeroTransparent(true);
+
 		ovl = new Overlay(roi);
-		iplus.setOverlay(ovl);
-		//iplus.setRoi(roi);
+		iplus.setOverlay(roi, Color.red, 0, Color.black);
+		// iplus.setRoi(roi);
 
 		ij.IJ.setTool(12);
 		icanv.disablePopupMenu(true);
@@ -213,7 +213,7 @@ public class LinearDistanceInteractiveHandler {
 	public void drawOverlay() {
 		overlay.copyBits(ip, 0, 0, Blitter.COPY);
 		overlay.setColor(Color.RED);
-		int pxls = (directionY) ? overlay.getWidth() : overlay.getHeight();
+		int pxls = (directionY) ? overlay.getHeight() : overlay.getWidth();
 		int line = 0;
 		int nearLine = 0;
 		Point cursorPos = getRealPos();
