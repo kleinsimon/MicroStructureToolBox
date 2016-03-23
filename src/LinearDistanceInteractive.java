@@ -19,7 +19,7 @@ import ij.process.ImageProcessor;
 
 public class LinearDistanceInteractive implements PlugInFilter {
 	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
-	private String[] directions = {"Horizontal", "Vertical"};
+	private String[] directions = { "Horizontal", "Vertical" };
 
 	private Double step = 50.d;
 	private Double offset = 25.d;
@@ -87,22 +87,20 @@ public class LinearDistanceInteractive implements PlugInFilter {
 					return;
 			}
 		}
-		
+
 		int lineDistancepx = step.intValue();
 		int offsetpx = offset.intValue();
 
 		Calibration cal = iplus.getCalibration();
 
 		if (doCalibrateStep) {
-			lineDistancepx = java.lang.Math
-					.toIntExact(Math.round((Double) step / ((directionY) ? cal.pixelWidth : cal.pixelHeight)));
-			offsetpx = java.lang.Math
-					.toIntExact(Math.round((Double) offset / ((directionY) ? cal.pixelWidth : cal.pixelHeight)));
+			lineDistancepx = Tools.getRoundedInt((Double) step / ((directionY) ? cal.pixelWidth : cal.pixelHeight));
+			offsetpx = Tools.getRoundedInt((Double) offset / ((directionY) ? cal.pixelWidth : cal.pixelHeight));
 		}
-		
-				LinearDistanceInteractiveMenuStrip menuStrip = new LinearDistanceInteractiveMenuStrip(lineDistancepx, offsetpx,
-						markLength, directionY, iplus, resultsTable, doResults, rt);
-				iplus.getWindow().add(menuStrip);
-				menuStrip.parentHandle.updateSize();
+
+		LinearDistanceInteractiveMenuStrip menuStrip = new LinearDistanceInteractiveMenuStrip(lineDistancepx, offsetpx,
+				markLength, directionY, iplus, resultsTable, doResults, rt);
+		iplus.getWindow().add(menuStrip);
+		menuStrip.parentHandle.updateSize();
 	}
 }
