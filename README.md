@@ -17,6 +17,7 @@ When using Fiji, you can simply add the update site **LinearDistance**.
 Open one or more binary (black/white) images or binarize an image. Start the plugin by selecting "Plugins>Analyze>Measure linear distances (two phases, 8 bit)" and select the results you want to obtain.
 
 **Available Options:**
+
 Option                         |  Description
 -------------------------------|----------------------------------------
 Apply image calibration        | Applies the set scale of each image to the results (by multiplying it)
