@@ -23,7 +23,6 @@ public class LinearDistanceInteractiveHandler {
 	private boolean directionY = false;
 	private boolean doApplyCalibration = false;
 	private ImagePlus iplus = null;
-	private ImageProcessor overlay = null;
 	private ImageCanvas icanv = null;
 	private Integer remtol = 10;
 	private Integer menuHeight = 16;
@@ -51,22 +50,11 @@ public class LinearDistanceInteractiveHandler {
 		rt = restable;
 		menuStrip = parentStrip;
 
-		overlay = new ColorProcessor(ip.getWidth(), ip.getHeight());
-
 		mouseActionListener = new LinearDistanceInteractiveMouseHandler(this);
 
 		ImageCanvas icanv = iplus.getCanvas();
 		icanv.addMouseMotionListener(mouseActionListener);
 		icanv.addMouseListener(mouseActionListener);
-
-		ImageRoi roi = new ImageRoi(0, 0, overlay);
-		roi.setName(iplus.getShortTitle() + " measured stripes");
-		roi.setOpacity(1d);
-		// roi.setZeroTransparent(true);
-
-		ovl = new Overlay(roi);
-		iplus.setOverlay(roi, Color.red, 0, Color.black);
-		// iplus.setRoi(roi);
 
 		ij.IJ.setTool(12);
 		icanv.disablePopupMenu(true);
@@ -85,11 +73,10 @@ public class LinearDistanceInteractiveHandler {
 	}
 
 	public void remove() {
-		menuStrip.getParent().remove(menuStrip);
-		overlay.setColor(Color.TRANSLUCENT);
-		overlay.fill();
 		iplus.setOverlay(null);
+		iplus.updateAndDraw();
 		icanv.removeMouseListener(mouseActionListener);
+		icanv.removeMouseMotionListener(mouseActionListener);
 		icanv.disablePopupMenu(false);
 	}
 
@@ -211,7 +198,9 @@ public class LinearDistanceInteractiveHandler {
 	}
 
 	public void drawOverlay() {
-		overlay.copyBits(ip, 0, 0, Blitter.COPY);
+		//overlay.copyBits(ip, 0, 0, Blitter.COPY);
+		ImageProcessor overlay = new ColorProcessor(ip.getWidth(), ip.getHeight());
+		//overlay = (ImageProcessor) ip.clone();
 		overlay.setColor(Color.RED);
 		int pxls = (directionY) ? overlay.getHeight() : overlay.getWidth();
 		int line = 0;
@@ -242,6 +231,15 @@ public class LinearDistanceInteractiveHandler {
 			}
 			line++;
 		}
+		
+		ImageRoi roi = new ImageRoi(0, 0, overlay);
+		//roi.setName(iplus.getShortTitle() + " measured stripes");
+		//roi.setOpacity(1d);
+		roi.setZeroTransparent(true);
+
+		//ovl = new Overlay(roi);
+		iplus.setOverlay(roi, Color.red, 0, Color.red);
+		// iplus.setRoi(roi);
 		// icanv.setCursor(Cursor.CURSOR_NONE);
 		iplus.draw();
 	}

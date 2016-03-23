@@ -12,7 +12,7 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 	private static final long serialVersionUID = 1L;
 	private Label infoLabel, countLabel;
 	private Button okButton, cancelButton, clearButton;
-	public LinearDistanceInteractiveHandler parentHandle;
+	public LinearDistanceInteractiveHandler interactionHandler;
 	private Boolean clearConf = false;
 	private Boolean removeConf = false;
 
@@ -46,14 +46,14 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 		this.add(cancelButton);
 		this.add(clearButton);
 		
-		parentHandle = new LinearDistanceInteractiveHandler(lineDistancePx, offSetPx,
+		interactionHandler = new LinearDistanceInteractiveHandler(lineDistancePx, offSetPx,
 				markLenPx, dirY, image, resTable, doRes, restable, this);
 	}
 
 	public void actionPerformed(ActionEvent e) {
 		String s = e.getActionCommand();
 		if (s == "OK") {
-			parentHandle.analyze();
+			interactionHandler.analyze();
 		} else if (s == "Cancel") {
 			remove();
 		} else if (s == "Clear") {
@@ -67,12 +67,13 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 
 	private void clear() {
 		if (confirm("Really clear marks?"))
-			parentHandle.clear();
+			interactionHandler.clear();
 	}
 
 	public boolean remove() {
 		if (confirm("Cancel measurement? THis will delete all marks.")) {
-			parentHandle.remove();
+			interactionHandler.remove();
+			this.getParent().remove(this);
 			return true;
 		}
 		return false;

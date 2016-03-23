@@ -101,6 +101,6 @@ public class LinearDistanceInteractive implements PlugInFilter {
 		LinearDistanceInteractiveMenuStrip menuStrip = new LinearDistanceInteractiveMenuStrip(lineDistancepx, offsetpx,
 				markLength, directionY, iplus, resultsTable, doResults, rt);
 		iplus.getWindow().add(menuStrip);
-		menuStrip.parentHandle.updateSize();
+		menuStrip.interactionHandler.updateSize();
 	}
 }
