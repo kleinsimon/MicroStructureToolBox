@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Hashtable;
