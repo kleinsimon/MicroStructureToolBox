@@ -38,9 +38,9 @@ public class LinearDistanceInteractive implements PlugInFilter {
 
 	boolean showDialog() {
 		step = Prefs.get("LinearDistanceInteractive.stepSize", 50);
-		offset = Prefs.get("LinearDistanceInteractive.stepSize", 25);
+		offset = Prefs.get("LinearDistanceInteractive.offset", 25);
 		doCalibrateStep = Prefs.get("LinearDistanceInteractive.doCalibrateStep", false);
-		doCalibrateOffset = Prefs.get("LinearDistanceInteractive.doCalibrateStep", false);
+		doCalibrateOffset = Prefs.get("LinearDistanceInteractive.doCalibrateOffset", false);
 		directionY = Prefs.get("LinearDistanceInteractive.directionY", false);
 
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
@@ -64,9 +64,9 @@ public class LinearDistanceInteractive implements PlugInFilter {
 
 		Prefs.set("LinearDistanceInteractive.stepSize", step);
 		Prefs.set("LinearDistanceInteractive.doCalibrateStep", doCalibrateStep);
-		Prefs.set("LinearDistanceInteractive.stepSize", offset);
+		Prefs.set("LinearDistanceInteractive.offset", offset);
 		Prefs.set("LinearDistanceInteractive.directionY", directionY);
-		Prefs.set("LinearDistanceInteractive.doCalibrateOffset", doCalibrateStep);
+		Prefs.set("LinearDistanceInteractive.doCalibrateOffset", doCalibrateOffset);
 
 		Prefs.savePreferences();
 		return true;
