@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map.Entry;
@@ -112,7 +113,9 @@ public class LinearDistanceInteractiveHandler {
 		List<Double> stripes = new ArrayList<Double>();
 		for (Entry<Integer, ArrayList<Integer>> e : markList.entrySet()) {
 			Integer lastMark = 0;
-			for (Integer mark : e.getValue()) {
+			ArrayList<Integer> marks = e.getValue();
+			Collections.sort(marks);
+			for (Integer mark : marks) {
 				if (lastMark == 0) {
 					lastMark = mark;
 					continue;

@@ -21,7 +21,6 @@
  		<manifest>
  		 	 	      <attribute name="Built-By" value="${user.name}"/>
  		</manifest>
- 		<zipgroupfileset dir="./lib/" includes="*.jar"/>
  	</jar>
     <copy file="LinearDistance_.jar" toDir="${pluginsDir}" />
   </target>
