@@ -1,5 +1,4 @@
 import java.awt.Color;
-import java.awt.Composite;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +14,6 @@ import ij.gui.ImageRoi;
 import ij.gui.Overlay;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
-import ij.process.Blitter;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
@@ -27,7 +25,7 @@ public class LinearDistanceInteractiveHandler {
 	private ImagePlus iplus = null;
 	private ImageCanvas icanv = null;
 	private Integer remtol = 10;
-	private Integer menuHeight = 16;
+	//private Integer menuHeight = 16;
 	private Integer numMarks = 0;
 	private LinearDistanceInteractiveMenuStrip menuStrip;
 	ImageProcessor ip = null;
@@ -125,6 +123,7 @@ public class LinearDistanceInteractiveHandler {
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		Stat res = new Stat(stripes);
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;

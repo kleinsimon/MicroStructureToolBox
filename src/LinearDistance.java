@@ -104,7 +104,7 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	public void showMessage(String message) {
-		ij.gui.MessageDialog e = new ij.gui.MessageDialog(ij.WindowManager.getCurrentWindow(), "", message);
+		new ij.gui.MessageDialog(ij.WindowManager.getCurrentWindow(), "", message);
 	}
 
 	public void doAnalyzeImage(int[][] pixels, Boolean goX, long step, List<Double> w, List<Double> b,
@@ -213,6 +213,7 @@ public class LinearDistance implements PlugInFilter {
 		doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, calx);
 
 		//{ "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y", "Black and White X", "Black and White Y", "All" }
+		@SuppressWarnings("unchecked")
 		Stat[] Stats = { new Stat(wdx), new Stat(wdy), new Stat(wdx, wdy), new Stat(bdx),
 				new Stat(bdy), new Stat(bdx, bdy), new Stat(wdx, bdx), new Stat(wdy, bdy), new Stat(wdx, bdy) };
 

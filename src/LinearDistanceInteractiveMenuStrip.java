@@ -13,8 +13,6 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 	private Label infoLabel, countLabel;
 	private Button okButton, cancelButton, clearButton;
 	public LinearDistanceInteractiveHandler interactionHandler;
-	private Boolean clearConf = false;
-	private Boolean removeConf = false;
 
 	public LinearDistanceInteractiveMenuStrip(int lineDistancePx, int offSetPx, int markLenPx, Boolean dirY,
 			ImagePlus image, String[] resTable, boolean[] doRes, ResultsTable restable) {
