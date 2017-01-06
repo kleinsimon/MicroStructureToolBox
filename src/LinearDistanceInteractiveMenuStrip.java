@@ -17,7 +17,6 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 	private Button okButton, cancelButton, clearButton;
 	private java.awt.Choice colorSelect;
 	public LinearDistanceInteractiveHandler interactionHandler;
-	private String[] colorList = {"Red","Green","Blue","Yellow","Orange","Purple","Black","White"};
 	
 	public LinearDistanceInteractiveMenuStrip(ImagePlus image, String[] resTable, ResultsTable restable) {
 		String overlayColor = Prefs.get("LinearDistanceInteractive.overlayColor", "Red");
@@ -29,7 +28,7 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 		countLabel.setText("Marks: 0");
 		
 		colorSelect = new java.awt.Choice();
-		for (String c : colorList)
+		for (String c : ij.plugin.Colors.colors)
 			colorSelect.add(c);
 		colorSelect.select(overlayColor);
 		colorSelect.addItemListener(this);

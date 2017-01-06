@@ -20,7 +20,6 @@ public class LinearDistanceInteractive implements PlugInFilter {
 	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
 	private String[] directions = { "Horizontal", "Vertical" };
 	private ResultsTable rt = new ResultsTable();
-	private String[] colorList = {"Red","Green","Blue","Yellow","Orange","Purple","Black","White"};
 
 	public int setup(String arg, ImagePlus imp) {
 		if (imp != null && !showDialog())
@@ -52,7 +51,7 @@ public class LinearDistanceInteractive implements PlugInFilter {
 		gd.addNumericField("Minimum margin left and right in pixels/units", offset, 1);
 		gd.addCheckbox("Offset distance in units", doCalibrateOffset);
 		gd.addChoice("Direction", directions, ((directionY) ? directions[1] : directions[0]));
-		gd.addChoice("Overlay color", colorList, "Red");
+		gd.addChoice("Overlay color", ij.plugin.Colors.colors, "Red");
 
 		gd.showDialog();
 		if (gd.wasCanceled())

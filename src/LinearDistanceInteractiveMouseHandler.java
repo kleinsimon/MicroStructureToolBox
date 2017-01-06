@@ -18,13 +18,17 @@ public class LinearDistanceInteractiveMouseHandler implements MouseMotionListene
 	}
 
 	public void mousePressed(MouseEvent e) {
-		if (e.getButton() == MouseEvent.BUTTON1)
+		if (e.getButton() == MouseEvent.BUTTON1) {
 			parent.addPoint();
+			e.consume();
+		}
 	}
 
 	public void mouseReleased(MouseEvent e) {
-		if (e.getButton() != MouseEvent.BUTTON1)
+		if (e.getButton() == MouseEvent.BUTTON3) {
 			parent.removePoint();
+			e.consume();
+		}
 	}
 
 	public void mouseEntered(MouseEvent e) {

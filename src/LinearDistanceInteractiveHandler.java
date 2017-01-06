@@ -43,7 +43,6 @@ public class LinearDistanceInteractiveHandler {
 	private Color ovlColor;
 
 	public LinearDistanceInteractiveHandler(ImagePlus image, String[] resTable, ResultsTable restable, LinearDistanceInteractiveMenuStrip parentStrip) {
-
 		iplus = image;
 		ip = iplus.getProcessor();
 		icanv = iplus.getCanvas();
@@ -188,6 +187,11 @@ public class LinearDistanceInteractiveHandler {
 
 	public void addPoint() {
 		Point cursorPos = getRealPos();
+		
+		int[] found = findPoint(cursorPos);
+		if (found!=null)
+			return;
+		
 		int line = getNextLine(cursorPos);
 
 		if (markList.get(line) == null) {
@@ -206,28 +210,39 @@ public class LinearDistanceInteractiveHandler {
 	public void removePoint() {
 		Point cursorPos = getRealPos();
 
-		int line = getNextLine(cursorPos);
-
-		if (markList.get(line) == null)
-			return;
-
-		Integer pos = (directionY) ? cursorPos.y : cursorPos.x;
-		Integer dist = Integer.MAX_VALUE;
-		Integer found = null;
-
-		for (Integer mark : markList.get(line)) {
-			int dt = Math.abs(mark - pos);
-			if (dt < dist) {
-				dist = dt;
-				found = mark;
-			}
-		}
-		if (found != null && dist <= remtol) {
-			markList.get(line).remove((Object) found);
+		int[] found = findPoint(cursorPos);
+		
+		if (found != null) {
+			markList.get(found[0]).remove((Object) found[1]);
+			numMarks--;
 			drawOverlay();
 		}
-		numMarks--;
 		menuStrip.setCounts(numMarks);
+	}
+	
+	public int[] findPoint(Point pos) {
+		int dist = Integer.MAX_VALUE;
+		int[] found = new int[2];
+		
+		int line = getNextLine(pos);
+
+		if (markList.get(line) == null)
+			return null;
+		
+		Integer lpos = (directionY) ? pos.y : pos.x;
+
+		for (Integer mark : markList.get(line)) {
+			int dt = Math.abs(mark - lpos);
+			if (dt < dist) {
+				dist = dt;
+				found[0] = line;
+				found[1] = mark;
+			}
+		}
+		if (found != null && dist <= remtol)
+			return found;
+		
+		return null;
 	}
 
 	public void drawOverlay() {
@@ -282,9 +297,11 @@ public class LinearDistanceInteractiveHandler {
 		//roi.setOpacity(1d);
 		roi.setZeroTransparent(true);
 
+		//roi.setProcessor(ip);
 		//ovl = new Overlay(roi);
-		iplus.setOverlay(roi, Color.red, 0, Color.red);
-		// iplus.setRoi(roi);
+		//iplus.setOverlay(roi, Color.red, 0, Color.red);
+		//iplus.setRoi((ImageRoi) null);
+		iplus.setRoi(roi);
 		// icanv.setCursor(Cursor.CURSOR_NONE);
 		iplus.draw();
 	}
