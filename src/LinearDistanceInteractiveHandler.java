@@ -1,6 +1,4 @@
-import java.awt.Color;
 import java.awt.Point;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -20,34 +18,25 @@ import ij.process.ImageProcessor;
 
 public class LinearDistanceInteractiveHandler {
 	private Hashtable<Integer, ArrayList<Integer>> markList = new Hashtable<Integer, ArrayList<Integer>>();
-
-	private Double step = 50.d;
-	private Double offset = 25.d;
-
-	private int markLength = 5;
-	private boolean doCalibrateStep, doCalibrateOffset, doCenterLines, doApplyCalibration;
-	private boolean directionY = false;
-	private boolean[] doResults;
 	
 	private ImagePlus iplus = null;
 	private ImageCanvas icanv = null;
-	private Integer remtol = 10;
+	
 	//private Integer menuHeight = 16;
 	private Integer numMarks = 0;
-	private LinearDistanceInteractiveMenuStrip menuStrip;
 	ImageProcessor ip = null;
-	private String[] resultsTable;
-	public LinearDistanceInteractiveMouseHandler mouseActionListener;
-	private ResultsTable rt;
+	private LinearDistanceInteractiveMenuStrip menuStrip;
+	private LinearDistanceInteractiveMouseHandler mouseActionListener;
+	private LinearDistanceInteractiveSettings settings;
+	private Double step, offset;
 	Overlay ovl;
-	private Color ovlColor;
 
-	public LinearDistanceInteractiveHandler(ImagePlus image, String[] resTable, ResultsTable restable, LinearDistanceInteractiveMenuStrip parentStrip) {
+	public LinearDistanceInteractiveHandler(ImagePlus image, LinearDistanceInteractiveSettings settings,  LinearDistanceInteractiveMenuStrip parentStrip) {
+		this.settings = settings;
+		
 		iplus = image;
 		ip = iplus.getProcessor();
 		icanv = iplus.getCanvas();
-		resultsTable = resTable;
-		rt = restable;
 		menuStrip = parentStrip;
 
 		mouseActionListener = new LinearDistanceInteractiveMouseHandler(this);
@@ -59,25 +48,18 @@ public class LinearDistanceInteractiveHandler {
 		ij.IJ.setTool(12);
 		icanv.disablePopupMenu(true);
 		iplus.draw();
-				
-		step = Prefs.get("LinearDistanceInteractive.stepSize", 50);
-		offset = Prefs.get("LinearDistanceInteractive.offset", 25);
-		markLength = Tools.getRoundedInt(Prefs.get("LinearDistanceInteractive.markLength", 5));
-		doCalibrateStep = Prefs.get("LinearDistanceInteractive.doCalibrateStep", false);
-		doCalibrateOffset = Prefs.get("LinearDistanceInteractive.doCalibrateOffset", false);
-		doCenterLines = Prefs.get("LinearDistanceInteractive.doCenterLines", true);
-		directionY = Prefs.get("LinearDistanceInteractive.directionY", false);
-		setColor(Prefs.get("LinearDistanceInteractive.overlayColor", "Red"));
-		
+
 		Calibration cal = iplus.getCalibration();
 
-		if (doCalibrateStep) {
-			step = (Double) step / ((directionY) ? cal.pixelWidth : cal.pixelHeight);
-		}
+		if (settings.doCalibrateStep) 
+			step = (Double) settings.step / ((settings.directionY) ? cal.pixelWidth : cal.pixelHeight);
+		else
+			step = settings.step;
 		
-		if (doCalibrateOffset) {
-			offset = (Double) offset / ((directionY) ? cal.pixelWidth : cal.pixelHeight);
-		}
+		if (settings.doCalibrateOffset) 
+			offset = (Double) settings.offset / ((settings.directionY) ? cal.pixelWidth : cal.pixelHeight);
+		else 
+			offset = settings.offset;
 		
 		drawOverlay();
 	}
@@ -100,36 +82,26 @@ public class LinearDistanceInteractiveHandler {
 		icanv.disablePopupMenu(false);
 	}
 
-	public void setColor(String overlayColor) {
-		try {
-		    Field field = Color.class.getField(overlayColor.toUpperCase());
-		    ovlColor = (Color)field.get(null);
-		} catch (Exception e) {
-			ovlColor = Color.RED;
-		}
-	}
-	
-	public boolean askResults() {
-		doResults = Tools.StringToBoolean(Prefs.get("LinearDistanceInteractive.doResults", ""), resultsTable.length);
-		doApplyCalibration = Prefs.get("LinearDistanceInteractive.doApplyCalibration", true);
-		
+	public boolean askResults() {	
 		GenericDialog gd = new GenericDialog("Select results");
 		gd.addMessage("Select the results you want to obtain.");
-		gd.addCheckboxGroup(1, 6, resultsTable, doResults);
-		gd.addCheckbox("Apply image calbration", doApplyCalibration);
+		gd.addCheckboxGroup(1, 6, settings.resultsTable, settings.doResults);
+		gd.addCheckbox("Apply image calbration", settings.doApplyCalibration);
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
-		for (int i = 0; i < doResults.length; i++) {
-			doResults[i] = gd.getNextBoolean();
+		for (int i = 0; i < settings.doResults.length; i++) {
+			settings.doResults[i] = gd.getNextBoolean();
 		}
-		doApplyCalibration = gd.getNextBoolean();
+		settings.doApplyCalibration = gd.getNextBoolean();
 
-		Prefs.set("LinearDistanceInteractive.doResults", Tools.BooleanToString(doResults));
-		Prefs.set("LinearDistanceInteractive.doApplyScale", doApplyCalibration);
-		Prefs.savePreferences();
+		Prefs.set("LinearDistanceInteractive.doResults", Tools.BooleanToString(settings.doResults));
+		Prefs.set("LinearDistanceInteractive.doApplyScale", settings.doApplyCalibration);
+
+		settings.save();
+		
 		return true;
 	}
 
@@ -154,23 +126,24 @@ public class LinearDistanceInteractiveHandler {
 
 		@SuppressWarnings("unchecked")
 		Stat res = new Stat(stripes);
+		ResultsTable rt = settings.restable;
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;
 		String unit = "px";
 		Calibration cal = iplus.getCalibration();
 
 		double calval = 1d;
-		if (doApplyCalibration) {
-			calval = (directionY) ? cal.pixelHeight : cal.pixelWidth;
+		if (settings.doApplyCalibration) {
+			calval = (settings.directionY) ? cal.pixelHeight : cal.pixelWidth;
 			unit = iplus.getCalibration().getUnit();
 		}
 
-		rt.setValue("Image", row, iplus.getTitle() + ((directionY) ? " V" : " H"));
+		rt.setValue("Image", row, iplus.getTitle() + ((settings.directionY) ? " V" : " H"));
 
-		for (int ri = 0; ri < doResults.length; ri++) {
-			if (!doResults[ri])
+		for (int ri = 0; ri < settings.doResults.length; ri++) {
+			if (!settings.doResults[ri])
 				continue;
-			String rName = resultsTable[ri];
+			String rName = settings.resultsTable[ri];
 			String cName = String.format("%s [%s] %s", "Stripe length", unit, rName);
 			double rValue = res.getFormattedValue(ri) * calval;
 			rt.setValue(cName, row, rValue);
@@ -198,10 +171,11 @@ public class LinearDistanceInteractiveHandler {
 			markList.put(line, new ArrayList<Integer>());
 		}
 
-		if (directionY)
+		if (settings.directionY)
 			markList.get(line).add(cursorPos.y);
 		else
 			markList.get(line).add(cursorPos.x);
+		
 		drawOverlay();
 		numMarks++;
 		menuStrip.setCounts(numMarks);
@@ -229,7 +203,7 @@ public class LinearDistanceInteractiveHandler {
 		if (markList.get(line) == null)
 			return null;
 		
-		Integer lpos = (directionY) ? pos.y : pos.x;
+		Integer lpos = (settings.directionY) ? pos.y : pos.x;
 
 		for (Integer mark : markList.get(line)) {
 			int dt = Math.abs(mark - lpos);
@@ -239,7 +213,7 @@ public class LinearDistanceInteractiveHandler {
 				found[1] = mark;
 			}
 		}
-		if (found != null && dist <= remtol)
+		if (found != null && dist <= settings.remtol)
 			return found;
 		
 		return null;
@@ -249,9 +223,9 @@ public class LinearDistanceInteractiveHandler {
 		//overlay.copyBits(ip, 0, 0, Blitter.COPY);
 		ImageProcessor overlay = new ColorProcessor(ip.getWidth(), ip.getHeight());
 		//overlay = (ImageProcessor) ip.clone();
-		overlay.setColor(ovlColor);
-		int pxlh = (directionY) ? overlay.getWidth() : overlay.getHeight();
-		int pxlw = (!directionY) ? overlay.getWidth() : overlay.getHeight();
+		overlay.setColor(settings.getovlColor());
+		int pxlh = (settings.directionY) ? overlay.getWidth() : overlay.getHeight();
+		int pxlw = (!settings.directionY) ? overlay.getWidth() : overlay.getHeight();
 		int line = 0;
 		int nearLine = 0;
 		Point cursorPos = getRealPos();
@@ -261,33 +235,34 @@ public class LinearDistanceInteractiveHandler {
 		
 		double offsetLeft = offset; 
 		
-		if (doCenterLines){
+		if (settings.doCenterLines){
 			Double numlines = (((double) pxlh - 2.0 * offset ) / step);
 			double nl = Math.floor(numlines);
 			offsetLeft = (pxlh - nl * step) / 2.0;
 			//offsetLeft = 1.0;
 		}
+		int ml = settings.markLength;
 
 		for (double ld = offsetLeft; ld <= pxlh-offset; ld += step) {
 			int l = Tools.getRoundedInt(ld);
-			if (directionY)
+			if (settings.directionY)
 				overlay.drawLine(l, 0, l, pxlw);
 			else
 				overlay.drawLine(0, l, pxlw, l);
 
 			if (markList.get(line) != null) {
 				for (Integer markPos : markList.get(line)) {
-					if (directionY)
-						overlay.drawLine(l - markLength, markPos, l + markLength, markPos);
+					if (settings.directionY)
+						overlay.drawLine(l - ml, markPos, l + ml, markPos);
 					else
-						overlay.drawLine(markPos, l - markLength, markPos, l + markLength);
+						overlay.drawLine(markPos, l - ml, markPos, l + ml);
 				}
 			}
 			if (line == nearLine && cursorPos != null) {
-				if (directionY)
-					overlay.drawLine(l - markLength, cursorPos.y, l + markLength, cursorPos.y);
+				if (settings.directionY)
+					overlay.drawLine(l - ml, cursorPos.y, l + ml, cursorPos.y);
 				else
-					overlay.drawLine(cursorPos.x, l - markLength, cursorPos.x, l + markLength);
+					overlay.drawLine(cursorPos.x, l - ml, cursorPos.x, l + ml);
 			}
 			line++;
 		}
@@ -309,7 +284,7 @@ public class LinearDistanceInteractiveHandler {
 	public int getNextLine(Point Cursor) {
 		if (Cursor == null)
 			throw new NullPointerException("No Point given");
-		if (directionY)
+		if (settings.directionY)
 			return Tools.getRoundedInt((((double) Cursor.x) - offset) /  step);
 		else
 			return Tools.getRoundedInt((((double) Cursor.y) - offset) /  step);

@@ -8,18 +8,14 @@
 //      Comment:		Buildfile taken from Patrick Pirrotte       
 
 import java.awt.Component;
-
 import ij.ImagePlus;
-import ij.Prefs;
 import ij.gui.GenericDialog;
-import ij.measure.ResultsTable;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
 
 public class LinearDistanceInteractive implements PlugInFilter {
-	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
-	private String[] directions = { "Horizontal", "Vertical" };
-	private ResultsTable rt = new ResultsTable();
+
+	public LinearDistanceInteractiveSettings settings = new LinearDistanceInteractiveSettings();
 
 	public int setup(String arg, ImagePlus imp) {
 		if (imp != null && !showDialog())
@@ -28,53 +24,31 @@ public class LinearDistanceInteractive implements PlugInFilter {
 	}
 
 	boolean showDialog() {
-		double step, offset;
-		int markLength = 5;
-		boolean doCalibrateStep, doCalibrateOffset, doCenterLines;
-		boolean directionY;
-		String overlayColor; 
-		
-		step = Prefs.get("LinearDistanceInteractive.stepSize", 50);
-		offset = Prefs.get("LinearDistanceInteractive.offset", 25);
-		doCalibrateStep = Prefs.get("LinearDistanceInteractive.doCalibrateStep", false);
-		doCalibrateOffset = Prefs.get("LinearDistanceInteractive.doCalibrateOffset", false);
-		doCenterLines = Prefs.get("LinearDistanceInteractive.doCenterLines", true);
-		directionY = Prefs.get("LinearDistanceInteractive.directionY", false);
-		overlayColor = Prefs.get("LinearDistanceInteractive.overlayColor", "Red");
-
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Interactive Linear Distances Plugin, created by Simon Klein");
 		gd.addMessage("This plug-in allows the interactive measurement of linear distances in X or Y direction.");
-		gd.addNumericField("Step distance between measures in pixels/units", step, 1);
-		gd.addCheckbox("Step distance in units", doCalibrateStep);
-		gd.addCheckbox("Center lines between borders", doCenterLines);
-		gd.addNumericField("Minimum margin left and right in pixels/units", offset, 1);
-		gd.addCheckbox("Offset distance in units", doCalibrateOffset);
-		gd.addChoice("Direction", directions, ((directionY) ? directions[1] : directions[0]));
+		gd.addNumericField("Step distance between measures in pixels/units", settings.step, 1);
+		gd.addCheckbox("Step distance in units", settings.doCalibrateStep);
+		gd.addCheckbox("Center lines between borders", settings.doCenterLines);
+		gd.addNumericField("Minimum margin left and right in pixels/units", settings.offset, 1);
+		gd.addCheckbox("Offset distance in units", settings.doCalibrateOffset);
+		gd.addChoice("Direction", settings.directions, ((settings.directionY) ? settings.directions[1] : settings.directions[0]));
 		gd.addChoice("Overlay color", ij.plugin.Colors.colors, "Red");
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
-		step = Math.max(gd.getNextNumber(), 1d);
-		doCalibrateStep = gd.getNextBoolean();
-		doCenterLines = gd.getNextBoolean();
-		offset = Math.max(gd.getNextNumber(), 1d);
-		doCalibrateOffset = gd.getNextBoolean();
-		directionY = gd.getNextChoice() == directions[1];
-		overlayColor = gd.getNextChoice();
-		
-		Prefs.set("LinearDistanceInteractive.stepSize", step);
-		Prefs.set("LinearDistanceInteractive.doCalibrateStep", doCalibrateStep);
-		Prefs.set("LinearDistanceInteractive.doCenterLines", doCenterLines);
-		Prefs.set("LinearDistanceInteractive.offset", offset);
-		Prefs.set("LinearDistanceInteractive.directionY", directionY);
-		Prefs.set("LinearDistanceInteractive.doCalibrateOffset", doCalibrateOffset);
-		Prefs.set("LinearDistanceInteractive.markLength", markLength);
-		Prefs.set("LinearDistanceInteractive.overlayColor", overlayColor);
+		settings.step = Math.max(gd.getNextNumber(), 1d);
+		settings.doCalibrateStep = gd.getNextBoolean();
+		settings.doCenterLines = gd.getNextBoolean();
+		settings.offset = Math.max(gd.getNextNumber(), 1d);
+		settings.doCalibrateOffset = gd.getNextBoolean();
+		settings.directionY = gd.getNextChoice() == settings.directions[1];
+		settings.overlayColor = gd.getNextChoice();
 
-		Prefs.savePreferences();
+		settings.save();
+		
 		return true;
 	}
 
@@ -94,7 +68,7 @@ public class LinearDistanceInteractive implements PlugInFilter {
 			}
 		}
 
-		LinearDistanceInteractiveMenuStrip menuStrip = new LinearDistanceInteractiveMenuStrip(iplus, resultsTable, rt);
+		LinearDistanceInteractiveMenuStrip menuStrip = new LinearDistanceInteractiveMenuStrip(iplus, settings);
 		iplus.getWindow().add(menuStrip);
 		menuStrip.interactionHandler.updateSize();
 	}
