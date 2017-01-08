@@ -77,8 +77,8 @@ public class PointAnalysisInteractive implements PlugInFilter {
 
 	public void analyzeImage(ImagePlus iplus) {
 		for (Component comp : iplus.getWindow().getComponents()) {
-			if (comp instanceof PointAnalysisInteractiveMenuStrip) {
-				if (!((PointAnalysisInteractiveMenuStrip) comp).remove())
+			if (comp instanceof ExclusiveOverlayMenuStrip) {
+				if (!((ExclusiveOverlayMenuStrip) comp).remove())
 					return;
 			}
 		}

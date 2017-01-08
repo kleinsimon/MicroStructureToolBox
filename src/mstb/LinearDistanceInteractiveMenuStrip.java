@@ -6,13 +6,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-
 import ij.ImagePlus;
-import ij.Prefs;
 import ij.gui.YesNoCancelDialog;
-import ij.measure.ResultsTable;
 
-public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionListener, ItemListener {
+public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionListener, ItemListener, ExclusiveOverlayMenuStrip {
 	private static final long serialVersionUID = 1L;
 	private Label infoLabel, countLabel;
 	private Button okButton, cancelButton, clearButton;
@@ -80,7 +77,7 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 			interactionHandler.clear();
 	}
 
-	public boolean remove() {
+	public Boolean remove() {
 		if (confirm("Cancel measurement? This will delete all marks.")) {
 			interactionHandler.remove();
 			this.getParent().remove(this);
@@ -102,7 +99,7 @@ public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionL
 			return;
 		String s = (String) e.getItem();
 		if (e.getSource() == colorSelect) {
-			interactionHandler.setColor(s);
+			interactionHandler.setColor(Tools.getColorByName(s));
 			interactionHandler.drawOverlay();
 		}
 	}

@@ -10,7 +10,6 @@ import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageRoi;
-import ij.gui.Overlay;
 import ij.measure.ResultsTable;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;

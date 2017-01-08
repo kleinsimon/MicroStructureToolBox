@@ -11,7 +11,7 @@ import ij.Prefs;
 import ij.gui.YesNoCancelDialog;
 import ij.measure.ResultsTable;
 
-public class PointAnalysisInteractiveMenuStrip extends Panel implements ActionListener, ItemListener {
+public class PointAnalysisInteractiveMenuStrip extends Panel implements ActionListener, ItemListener, ExclusiveOverlayMenuStrip {
 	private static final long serialVersionUID = 1L;
 	private Label countLabel;
 	private Button okButton, cancelButton, clearButton, thButton;
@@ -123,7 +123,7 @@ public class PointAnalysisInteractiveMenuStrip extends Panel implements ActionLi
 			interactionHandler.clear();
 	}
 
-	public boolean remove() {
+	public Boolean remove() {
 		if (confirm("Cancel measurement? This will reset all marks.")) {
 			interactionHandler.remove();
 			this.getParent().remove(this);

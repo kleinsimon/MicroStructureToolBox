@@ -1,7 +1,5 @@
 package mstb;
 import java.awt.Color;
-import java.lang.reflect.Field;
-
 import ij.Prefs;
 import ij.measure.ResultsTable;
 
@@ -24,12 +22,7 @@ public class LinearDistanceInteractiveSettings {
 	}
 	
 	public Color getovlColor() {
-		try {
-		    Field field = Color.class.getField(overlayColor.toUpperCase());
-		    return (Color)field.get(null);
-		} catch (Exception e) {
-			return Color.RED;
-		}
+		return Tools.getColorByName(overlayColor.toUpperCase());
 	}
 	
 	public void load() {

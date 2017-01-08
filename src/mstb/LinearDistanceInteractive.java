@@ -63,8 +63,8 @@ public class LinearDistanceInteractive implements PlugInFilter {
 
 	public void analyzeImage(ImagePlus iplus) {
 		for (Component comp : iplus.getWindow().getComponents()) {
-			if (comp instanceof LinearDistanceInteractiveMenuStrip) {
-				if (!((LinearDistanceInteractiveMenuStrip) comp).remove())
+			if (comp instanceof ExclusiveOverlayMenuStrip) {
+				if (!((ExclusiveOverlayMenuStrip) comp).remove())
 					return;
 			}
 		}

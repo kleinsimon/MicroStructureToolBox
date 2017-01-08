@@ -1,6 +1,9 @@
 package mstb;
 
-public class Tools {
+import java.awt.Color;
+import java.lang.reflect.Field;
+
+final public class Tools {
 
 	public static int getRoundedInt(Double from) {
 		//Long rnd = Math.round(from);
@@ -25,5 +28,14 @@ public class Tools {
 			}
 		}
 		return ret;
+	}
+	
+	public static Color getColorByName(String Cname) {
+		try {
+		    Field field = Color.class.getField(Cname);
+		    return (Color)field.get(null);
+		} catch (Exception e) {
+			return Color.RED;
+		}
 	}
 }

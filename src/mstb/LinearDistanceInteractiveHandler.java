@@ -1,4 +1,5 @@
 package mstb;
+import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +32,7 @@ public class LinearDistanceInteractiveHandler {
 	private LinearDistanceInteractiveSettings settings;
 	private Double step, offset;
 	Overlay ovl;
+	Color ovlColor;
 
 	public LinearDistanceInteractiveHandler(ImagePlus image, LinearDistanceInteractiveSettings settings,  LinearDistanceInteractiveMenuStrip parentStrip) {
 		this.settings = settings;
@@ -62,6 +64,7 @@ public class LinearDistanceInteractiveHandler {
 		else 
 			offset = settings.offset;
 		
+		setColor(settings.getovlColor());
 		drawOverlay();
 	}
 
@@ -224,7 +227,7 @@ public class LinearDistanceInteractiveHandler {
 		//overlay.copyBits(ip, 0, 0, Blitter.COPY);
 		ImageProcessor overlay = new ColorProcessor(ip.getWidth(), ip.getHeight());
 		//overlay = (ImageProcessor) ip.clone();
-		overlay.setColor(settings.getovlColor());
+		overlay.setColor(ovlColor);
 		int pxlh = (settings.directionY) ? overlay.getWidth() : overlay.getHeight();
 		int pxlw = (!settings.directionY) ? overlay.getWidth() : overlay.getHeight();
 		int line = 0;
@@ -280,6 +283,11 @@ public class LinearDistanceInteractiveHandler {
 		iplus.setRoi(roi);
 		// icanv.setCursor(Cursor.CURSOR_NONE);
 		iplus.draw();
+	}
+
+	public void setColor(Color color) {
+		ovlColor = color;
+		//drawOverlay();
 	}
 
 	public int getNextLine(Point Cursor) {
