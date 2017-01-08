@@ -1,3 +1,5 @@
+This repostitory is a merge of the old LinearDistance and PointAnalysis Repos.
+
 # Microstructure Toolbox for ImageJ / MSBT
 
 ## LinearDistance
