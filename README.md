@@ -1,12 +1,12 @@
 This repostitory is a merge of the old LinearDistance and PointAnalysis Repos.
 
-# Microstructure Toolbox for ImageJ / MSBT
+# Microstructure Toolbox for ImageJ / MSTB
 
 ## Dependecies
 * [ImageJ](http://rsb.info.nih.gov/ij/) (tested with ImageJ 1.50e)
 
 ## Installation
-Copy the File **MSBT_.jar** in the plugins/jars folder. 
+Copy the File **MSTB_.jar** in the plugins/jars folder. 
 When using Fiji, you can simply add the update site **SimonKlein**.
 
 # LinearDistance
