@@ -32,7 +32,7 @@ Standard Deviations            | Print standard deviations for all measurements
 Numbers                        | Print the number of counted stripes
 Both Phases                    | Calculates also the mean of both (all) Phases (Black and White)
 
-# Measure linear distances (single phase, interactive)
+## Measure linear distances (single phase, interactive)
 Open any kind of image. Start the plugin by selecting "Plugins>Analyze>Measure linear distances (single phase, interactive)". Set the distance and offset you prefer in either pixels or units (if calibrated). Set marks in the image by left click, remove marks with right click. When done, press OK at the bottom of the image and select the results you want to obtain. The selected statistics for the stripe-length between marks will be presented afterwards.
 
 # PointAnalysis
