@@ -1,3 +1,4 @@
+package mstb;
 
 //=====================================================
 //      Name:           LinearDistance 2 Phase Binary
