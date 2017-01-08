@@ -2,7 +2,7 @@ This repostitory is a merge of the old LinearDistance and PointAnalysis Repos.
 
 # Microstructure Toolbox for ImageJ / MSBT
 
-## LinearDistance
+# LinearDistance
 Plugin for ImageJ to measure linear distances in images in X and Y direction.
 At this time, two methods are implemented: First, the automatic scan of a binarized, two phased image. Second, the interactive placement of marks which will be measured afterwards (Linear Interception).
 
