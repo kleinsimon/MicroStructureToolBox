@@ -1,4 +1,4 @@
-package mstb;
+package mstb.pai;
 import java.awt.Button;
 import java.awt.Label;
 import java.awt.Panel;
@@ -10,6 +10,7 @@ import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.YesNoCancelDialog;
 import ij.measure.ResultsTable;
+import mstb.ExclusiveOverlayMenuStrip;
 
 public class PointAnalysisInteractiveMenuStrip extends Panel implements ActionListener, ItemListener, ExclusiveOverlayMenuStrip {
 	private static final long serialVersionUID = 1L;
@@ -20,7 +21,7 @@ public class PointAnalysisInteractiveMenuStrip extends Panel implements ActionLi
 	//private JSlider thSlider;
 	public PointAnalysisInteractiveHandler interactionHandler;
 
-	public PointAnalysisInteractiveMenuStrip(ImagePlus image, ResultsTable restable) {
+	public PointAnalysisInteractiveMenuStrip(ImagePlus image, PointAnalysisInteractiveSettings settings) {
 		String overlayColor = Prefs.get("PointAnalysisInteractive.overlayColor", "Red");
 		
 		countLabel = new Label();
@@ -73,7 +74,7 @@ public class PointAnalysisInteractiveMenuStrip extends Panel implements ActionLi
 		this.add(thSelect);
 		this.add(thButton);
 		
-		interactionHandler = new PointAnalysisInteractiveHandler(image, restable, this);
+		interactionHandler = new PointAnalysisInteractiveHandler(image, settings, this);
 	}
 
 	public void actionPerformed(ActionEvent e) {

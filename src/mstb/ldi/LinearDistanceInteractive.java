@@ -1,4 +1,4 @@
-package mstb;
+package mstb.ldi;
 
 //=====================================================
 //      Name:           LinearDistance
@@ -13,6 +13,7 @@ import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
+import mstb.ExclusiveOverlayMenuStrip;
 
 public class LinearDistanceInteractive implements PlugInFilter {
 

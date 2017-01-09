@@ -2,9 +2,10 @@ package mstb;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.List;
 
-class Stat {
+public class Stat {
 	private Double mean = null;
 	private Double sum = null;
 	private Double variance = null;

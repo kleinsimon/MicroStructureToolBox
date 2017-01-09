@@ -1,5 +1,5 @@
 package mstb;
 
-interface ExclusiveOverlayMenuStrip {
+public interface ExclusiveOverlayMenuStrip {
 	public Boolean remove();
 }

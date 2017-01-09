@@ -1,7 +1,8 @@
-package mstb;
+package mstb.ldi;
 import java.awt.Color;
 import ij.Prefs;
 import ij.measure.ResultsTable;
+import mstb.Tools;
 
 public class LinearDistanceInteractiveSettings {
 	public String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };

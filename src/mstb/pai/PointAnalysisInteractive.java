@@ -1,4 +1,4 @@
-package mstb;
+package mstb.pai;
 
 //=====================================================
 //      Name:           LinearDistance
@@ -15,10 +15,11 @@ import ij.gui.GenericDialog;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
+import mstb.ExclusiveOverlayMenuStrip;
 
 public class PointAnalysisInteractive implements PlugInFilter {
-	private ResultsTable rt = new ResultsTable();
-
+	public PointAnalysisInteractiveSettings settings = new PointAnalysisInteractiveSettings();
+	
 	public int setup(String arg, ImagePlus imp) {
 		if (imp != null && !showDialog())
 			return DONE;
@@ -26,44 +27,28 @@ public class PointAnalysisInteractive implements PlugInFilter {
 	}
 
 	boolean showDialog() {
-		Double pointsX, pointsY = 20.d, numDomains = 2.0;
-		String overlayColor;
-		boolean randomizePoints;
-
-		pointsX = Prefs.get("PointAnalysisInteractive.pointsX", 20);
-		pointsY = Prefs.get("PointAnalysisInteractive.pointsY", 20);
-		numDomains = Prefs.get("PointAnalysisInteractive.numDomains", 2);
-		randomizePoints = Prefs.get("PointAnalysisInteractive.randomizePoints", false);
-		overlayColor = Prefs.get("PointAnalysisInteractive.overlayColor", "Red");
-
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Point Domain Analysis Plugin, created by Simon Klein");
 		gd.addMessage("This plug-in allows the interactive assignment of points to a given number of domains.");
-		gd.addNumericField("Number of points X / Total number of points if randomized", pointsX, 0);
-		gd.addNumericField("Number of points Y", pointsY, 0);
-		gd.addNumericField("Number of domains", numDomains, 0);
-		gd.addCheckbox("Randomize Points", randomizePoints);
+		gd.addNumericField("Number of points X / Total number of points if randomized", settings.pointsX, 0);
+		gd.addNumericField("Number of points Y", settings.pointsY, 0);
+		gd.addNumericField("Number of domains", settings.numDomains, 0);
+		gd.addCheckbox("Randomize Points", settings.randomizePoints);
 		gd.addChoice("Overlay color", ij.plugin.Colors.colors, "Red");
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
-		pointsX = Math.max(gd.getNextNumber(), 1d);
-		pointsY = Math.max(gd.getNextNumber(), 1d);
-		numDomains = Math.max(gd.getNextNumber(), 2d);
-		randomizePoints = gd.getNextBoolean();
-		overlayColor = gd.getNextChoice();
+		settings.pointsX = (int) Math.max(gd.getNextNumber(), 1d);
+		settings.pointsY = (int) Math.max(gd.getNextNumber(), 1d);
+		settings.numDomains = (int) Math.max(gd.getNextNumber(), 2d);
+		settings.randomizePoints = gd.getNextBoolean();
+		settings.overlayColor = gd.getNextChoice();
 		
-		
-		Prefs.set("PointAnalysisInteractive.pointsX", pointsX);
-		Prefs.set("PointAnalysisInteractive.pointsY", pointsY);
-		Prefs.set("PointAnalysisInteractive.numDomains", numDomains);
-		Prefs.set("PointAnalysisInteractive.randomizePoints", randomizePoints);
-		Prefs.set("PointAnalysisInteractive.overlayColor", overlayColor);
-		Prefs.set("PointAnalysisInteractive.markLength", 6.0);
+		settings.restable = new ResultsTable();
 
-		Prefs.savePreferences();
+		settings.save();
 		return true;
 	}
 
@@ -84,7 +69,7 @@ public class PointAnalysisInteractive implements PlugInFilter {
 		}
 
 
-		PointAnalysisInteractiveMenuStrip menuStrip = new PointAnalysisInteractiveMenuStrip(iplus, rt);
+		PointAnalysisInteractiveMenuStrip menuStrip = new PointAnalysisInteractiveMenuStrip(iplus, settings);
 		iplus.getWindow().add(menuStrip);
 		menuStrip.interactionHandler.updateSize();
 	}

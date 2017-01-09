@@ -1,4 +1,4 @@
-package mstb;
+package mstb.ldi;
 import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -17,6 +17,8 @@ import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import mstb.Stat;
+import mstb.Tools;
 
 public class LinearDistanceInteractiveHandler {
 	private Hashtable<Integer, ArrayList<Integer>> markList = new Hashtable<Integer, ArrayList<Integer>>();

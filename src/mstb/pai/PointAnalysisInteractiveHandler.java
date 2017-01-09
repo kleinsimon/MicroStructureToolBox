@@ -1,4 +1,4 @@
-package mstb;
+package mstb.pai;
 import java.awt.Color;
 import java.awt.Point;
 import java.lang.reflect.Field;
@@ -13,34 +13,33 @@ import ij.gui.ImageRoi;
 import ij.measure.ResultsTable;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import mstb.Tools;
 
 public class PointAnalysisInteractiveHandler {
-	private Integer px, py, nd, sx, sy, markLengthPx;
+	private Integer px, py, nd, sx, sy;
 	private Double dx, dy, ox, oy;
 	private Hashtable<Point, Integer> markList = new Hashtable<Point, Integer>();
 	private ImagePlus iplus = null;
 	private ImageCanvas icanv = null;
 	private ArrayList<Point> points;
+	private ImageProcessor ip = null;
+	private PointAnalysisInteractiveMouseHandler mouseActionListener;
+	private PointAnalysisInteractiveSettings settings;
 	private PointAnalysisInteractiveMenuStrip menuStrip;
-	ImageProcessor ip = null;
-	public PointAnalysisInteractiveMouseHandler mouseActionListener;
-	private ResultsTable rt;
-	private Boolean randomize;
 	private Color ovlColor;
 
-	public PointAnalysisInteractiveHandler(ImagePlus image, ResultsTable restable,
+	public PointAnalysisInteractiveHandler(ImagePlus image, PointAnalysisInteractiveSettings settings,
 			PointAnalysisInteractiveMenuStrip parentStrip) {
 		
-		px = ((Double) Prefs.get("PointAnalysisInteractive.pointsX", 20)).intValue();
-		py = ((Double) Prefs.get("PointAnalysisInteractive.pointsY", 20)).intValue();
-		nd = ((Double) Prefs.get("PointAnalysisInteractive.numDomains", 2)).intValue();
-		randomize = Prefs.get("PointAnalysisInteractive.randomizePoints", false);
+		this.settings = settings;
 		
-		markLengthPx = ((Double) Prefs.get("PointAnalysisInteractive.markLength", 5)).intValue();
+		px = settings.pointsX;
+		py = settings.pointsY;
+		nd = settings.numDomains;
+
 		iplus = image;
 		ip = iplus.getProcessor();
 		icanv = iplus.getCanvas();
-		rt = restable;
 		menuStrip = parentStrip;
 
 		setColor(Prefs.get("PointAnalysisInteractive.overlayColor", "Red"));
@@ -86,7 +85,7 @@ public class PointAnalysisInteractiveHandler {
 	
 	public void initPoints() {
 		int n;
-		if (randomize){
+		if (settings.randomizePoints){
 			n = px.intValue();
 			points = new ArrayList<Point>(n);
 			
@@ -137,6 +136,8 @@ public class PointAnalysisInteractiveHandler {
 
 		Integer[] domains = getMarkCounts();
 
+		ResultsTable rt = settings.restable;
+		
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;
 
@@ -205,7 +206,7 @@ public class PointAnalysisInteractiveHandler {
 
 		overlay.setColor(ovlColor);
 
-		int l = markLengthPx;
+		int l = settings.markLength;
 
 		Enumeration<Point> e = markList.keys();
 		while (e.hasMoreElements()) {

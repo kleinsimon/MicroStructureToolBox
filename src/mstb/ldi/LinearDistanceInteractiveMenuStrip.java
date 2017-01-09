@@ -1,4 +1,4 @@
-package mstb;
+package mstb.ldi;
 import java.awt.Button;
 import java.awt.Label;
 import java.awt.Panel;
@@ -8,6 +8,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import ij.ImagePlus;
 import ij.gui.YesNoCancelDialog;
+import mstb.ExclusiveOverlayMenuStrip;
+import mstb.Tools;
 
 public class LinearDistanceInteractiveMenuStrip extends Panel implements ActionListener, ItemListener, ExclusiveOverlayMenuStrip {
 	private static final long serialVersionUID = 1L;

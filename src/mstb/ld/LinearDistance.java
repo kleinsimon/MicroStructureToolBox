@@ -1,4 +1,4 @@
-package mstb;
+package mstb.ld;
 
 //=====================================================
 //      Name:           LinearDistance 2 Phase Binary
@@ -21,15 +21,16 @@ import ij.plugin.filter.PlugInFilter;
 import ij.process.Blitter;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import mstb.Stat;
+import mstb.Tools;
 
 public class LinearDistance implements PlugInFilter {
 	private String[] measurementsTable = { "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y",
 			"Black and White X", "Black and White Y", "All" };
 	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
 	private Double step;
-	private boolean doApplyCalibration, doCalibrateStep, doIterateAllImages, doExcludeEdges, doShowOverlay;
-	private boolean[] doMeasurements;
-	private boolean[] doResults;
+	private boolean doApplyCalibration, doCalibrateStep, doIterateAllImages, doExcludeEdges, doShowOverlay, doAggregate;
+	private boolean[] doMeasurements, doResults;
 	private ResultsTable rt = new ResultsTable();
 
 	public int setup(String arg, ImagePlus imp) {
@@ -46,6 +47,7 @@ public class LinearDistance implements PlugInFilter {
 		doIterateAllImages = Prefs.get("LinearDistance.doIterateAllImages", true);
 		doExcludeEdges = Prefs.get("LinearDistance.doExcludeEdges", true);
 		doShowOverlay = Prefs.get("LinearDistance.doShowOverlay", true);
+		doAggregate = Prefs.get("LinearDistance.doAggregate", true);
 		doMeasurements = Tools.StringToBoolean(Prefs.get("LinearDistance.doMeasurements",""), measurementsTable.length);
 		doResults = Tools.StringToBoolean(Prefs.get("LinearDistance.doResults",""), resultsTable.length);
 
@@ -57,8 +59,10 @@ public class LinearDistance implements PlugInFilter {
 		gd.addNumericField("Step distance between measures in pixels/units", step, 1);
 		gd.addCheckbox("Step distance in units", doCalibrateStep);
 		gd.addCheckbox("Measure all opened Images", doIterateAllImages);
+		gd.addCheckbox("Aggregate measurements of all images", doAggregate);
 		gd.addCheckbox("Exclude stripes cut by Edges", doExcludeEdges);
 		gd.addCheckbox("Show measured pixels as overlay", doShowOverlay);
+		
 
 		gd.addMessage("Measurements");
 		gd.addCheckboxGroup(2, 5, measurementsTable, doMeasurements);
@@ -88,6 +92,7 @@ public class LinearDistance implements PlugInFilter {
 		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
 		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
 		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
+		Prefs.set("LinearDistance.doAggregate", doAggregate);
 		Prefs.set("LinearDistance.doMeasurements", Tools.BooleanToString(doMeasurements));
 		Prefs.set("LinearDistance.doResults", Tools.BooleanToString(doResults));
 		Prefs.savePreferences();
@@ -95,15 +100,28 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	public void run(ImageProcessor ip) {
+		LinearDistanceResults res = null;
+		
 		if (doIterateAllImages) {
 			for (int id : ij.WindowManager.getIDList()) {
-				analyzeImage(ij.WindowManager.getImage(id));
+				if (doAggregate) {
+					res = new LinearDistanceResults();
+					analyzeImage(ij.WindowManager.getImage(id), res);
+				} else{
+					res = new LinearDistanceResults();
+					analyzeImage(ij.IJ.getImage(), res);
+					showResult(res);
+				}
 			}
+			if (doAggregate)
+				showResult(res);
 		} else {
-			analyzeImage(ij.IJ.getImage());
+			res = new LinearDistanceResults();
+			analyzeImage(ij.IJ.getImage(), res);
+			showResult(res);
 		}
 	}
-
+	
 	public void showMessage(String message) {
 		new ij.gui.MessageDialog(ij.WindowManager.getCurrentWindow(), "", message);
 	}
@@ -163,12 +181,15 @@ public class LinearDistance implements PlugInFilter {
 		}
 	}
 
-	private void analyzeImage(ImagePlus iplus) {
+	@SuppressWarnings("unchecked")
+	private void analyzeImage(ImagePlus iplus, LinearDistanceResults res) {
+		
 		ImageProcessor ip = iplus.getProcessor();
 		ImageProcessor oix = null;
 		ImageProcessor oiy = null;
 		long lineDistanceX = step.intValue();
 		long lineDistanceY = step.intValue();
+		
 		if (doShowOverlay) {
 			oix = new ColorProcessor(ip.getWidth(), ip.getHeight());
 			oiy = new ColorProcessor(ip.getWidth(), ip.getHeight());
@@ -212,12 +233,21 @@ public class LinearDistance implements PlugInFilter {
 
 		doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, caly);
 		doAnalyzeImage(pixelsRotate, true, lineDistanceY, wdx, bdx, oix, calx);
-
-		//{ "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y", "Black and White X", "Black and White Y", "All" }
-		@SuppressWarnings("unchecked")
-		Stat[] Stats = { new Stat(wdx), new Stat(wdy), new Stat(wdx, wdy), new Stat(bdx),
-				new Stat(bdy), new Stat(bdx, bdy), new Stat(wdx, bdx), new Stat(wdy, bdy), new Stat(wdx, bdy) };
-
+		
+		res.wdx.addList(wdx); 
+		res.wdy.addList(wdy);
+		res.wdxwdy.addList(wdx, wdy);
+		res.bdx.addList(bdx);
+		res.bdx.addList(bdy);
+		res.bdxbdy.addList(bdx, bdy);
+		res.wdxbdx.addList(wdx, bdx);
+		res.wdybdy.addList(wdy, bdy);
+		res.wdxbdy.addList(wdx, bdy);
+		
+		res.calStr = calx.toString() + ((!calx.equals(caly)) ? "/" + caly.toString() : "");
+		res.title = iplus.getTitle();
+		res.unit=unit;
+		
 		if (doShowOverlay) {
 			oix.copyBits(oiy, 0, 0, Blitter.ADD);
 			ImageRoi roi = new ImageRoi(0, 0, oix);
@@ -226,16 +256,23 @@ public class LinearDistance implements PlugInFilter {
 			iplus.deleteRoi();
 			iplus.setRoi(roi, true);
 		}
+	}
+	
+	private void showResult(LinearDistanceResults res) {
+
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;
 
-		rt.setValue("Image", row, iplus.getTitle());
-		rt.setValue("Unit", row, unit);
-		if (doApplyCalibration && cal.scaled()) {
-			rt.setValue("Calibration X/Y", row, calx.toString() + ((!calx.equals(caly)) ? "/" + caly.toString() : ""));
-		}
+		rt.setValue("Image", row, res.title);
+		if (res.unit != null)
+			rt.setValue("Unit", row, res.unit);
+		
+		if (doApplyCalibration && res.calStr != null) 
+			rt.setValue("Calibration X/Y", row, res.calStr);
+		
 		String rName, mName, cName;
 		Double rValue;
+		Stat[] Stats = res.getAll();
 
 		for (int mi = 0; mi < doMeasurements.length; mi++) {
 			if (!doMeasurements[mi])
