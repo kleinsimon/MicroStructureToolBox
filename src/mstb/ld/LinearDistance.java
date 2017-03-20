@@ -25,86 +25,63 @@ import mstb.Stat;
 import mstb.Tools;
 
 public class LinearDistance implements PlugInFilter {
-	private String[] measurementsTable = { "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y",
-			"Black and White X", "Black and White Y", "All" };
-	private String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
-	private Double step;
-	private boolean doApplyCalibration, doCalibrateStep, doIterateAllImages, doExcludeEdges, doShowOverlay, doAggregate;
-	private boolean[] doMeasurements, doResults;
-	private ResultsTable rt = new ResultsTable();
-
+	private LinearDistanceSettings settings = new LinearDistanceSettings();
+	
 	public int setup(String arg, ImagePlus imp) {
 		if (imp != null && !showDialog())
 			return DONE;
-		rt.reset();
 		return DOES_8G;
 	}
 
 	boolean showDialog() {
-		step = Prefs.get("LinearDistance.stepSize", 1);
-		doApplyCalibration = Prefs.get("LinearDistance.doApplyCalibration", true);
-		doCalibrateStep = Prefs.get("LinearDistance.doCalibrateStep", false);
-		doIterateAllImages = Prefs.get("LinearDistance.doIterateAllImages", true);
-		doExcludeEdges = Prefs.get("LinearDistance.doExcludeEdges", true);
-		doShowOverlay = Prefs.get("LinearDistance.doShowOverlay", true);
-		doAggregate = Prefs.get("LinearDistance.doAggregate", true);
-		doMeasurements = Tools.StringToBoolean(Prefs.get("LinearDistance.doMeasurements",""), measurementsTable.length);
-		doResults = Tools.StringToBoolean(Prefs.get("LinearDistance.doResults",""), resultsTable.length);
+		settings.load();
 
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Linear Distances Plugin, created by Simon Klein");
 
 		gd.addMessage("This plug-in measures the linear distances in x and y directions for binary images.");
-		gd.addCheckbox("Apply image calbration", doApplyCalibration);
-		gd.addNumericField("Step distance between measures in pixels/units", step, 1);
-		gd.addCheckbox("Step distance in units", doCalibrateStep);
-		gd.addCheckbox("Measure all opened Images", doIterateAllImages);
-		gd.addCheckbox("Aggregate measurements of all images", doAggregate);
-		gd.addCheckbox("Exclude stripes cut by Edges", doExcludeEdges);
-		gd.addCheckbox("Show measured pixels as overlay", doShowOverlay);
+		gd.addCheckbox("Apply image calbration", settings.doApplyCalibration);
+		gd.addNumericField("Step distance between measures in pixels/units", settings.step, 1);
+		gd.addCheckbox("Step distance in units", settings.doCalibrateStep);
+		gd.addCheckbox("Measure all opened Images", settings.doIterateAllImages);
+		//gd.addCheckbox("Aggregate measurements of all images", settings.doAggregate);
+		gd.addCheckbox("Exclude stripes cut by Edges", settings.doExcludeEdges);
+		gd.addCheckbox("Show measured pixels as overlay", settings.doShowOverlay);
 		
 
 		gd.addMessage("Measurements");
-		gd.addCheckboxGroup(2, 5, measurementsTable, doMeasurements);
+		gd.addCheckboxGroup(2, 5, settings.measurementsTable, settings.doMeasurements);
 		gd.addMessage("Results");
-		gd.addCheckboxGroup(1, 6, resultsTable, doResults);
+		gd.addCheckboxGroup(1, 6, settings.resultsTable, settings.doResults);
 
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return false;
 
-		doApplyCalibration = gd.getNextBoolean();
-		step = Math.max(gd.getNextNumber(), 1d);
-		doCalibrateStep = gd.getNextBoolean();
-		doIterateAllImages = gd.getNextBoolean();
-		doExcludeEdges = gd.getNextBoolean();
-		doShowOverlay = gd.getNextBoolean();
-		for (int i = 0; i < doMeasurements.length; i++) {
-			doMeasurements[i] = gd.getNextBoolean();
+		settings.doApplyCalibration = gd.getNextBoolean();
+		settings.step = Math.max(gd.getNextNumber(), 1d);
+		settings.doCalibrateStep = gd.getNextBoolean();
+		settings.doIterateAllImages = gd.getNextBoolean();
+		settings.doExcludeEdges = gd.getNextBoolean();
+		settings.doShowOverlay = gd.getNextBoolean();
+		for (int i = 0; i < settings.doMeasurements.length; i++) {
+			settings.doMeasurements[i] = gd.getNextBoolean();
 		}
-		for (int i = 0; i < doResults.length; i++) {
-			doResults[i] = gd.getNextBoolean();
+		for (int i = 0; i < settings.doResults.length; i++) {
+			settings.doResults[i] = gd.getNextBoolean();
 		}
 
-		Prefs.set("LinearDistance.doApplyScale", doApplyCalibration);
-		Prefs.set("LinearDistance.stepSize", step);
-		Prefs.set("LinearDistance.doCalibrateStep", doCalibrateStep);
-		Prefs.set("LinearDistance.doIterateAllImages", doIterateAllImages);
-		Prefs.set("LinearDistance.doExcludeEdges", doExcludeEdges);
-		Prefs.set("LinearDistance.doShowOverlay", doShowOverlay);
-		Prefs.set("LinearDistance.doAggregate", doAggregate);
-		Prefs.set("LinearDistance.doMeasurements", Tools.BooleanToString(doMeasurements));
-		Prefs.set("LinearDistance.doResults", Tools.BooleanToString(doResults));
-		Prefs.savePreferences();
+		settings.save();
+		
 		return true;
 	}
 
 	public void run(ImageProcessor ip) {
 		LinearDistanceResults res = null;
 		
-		if (doIterateAllImages) {
+		if (settings.doIterateAllImages) {
 			for (int id : ij.WindowManager.getIDList()) {
-				if (doAggregate) {
+				if (settings.doAggregate) {
 					res = new LinearDistanceResults();
 					analyzeImage(ij.WindowManager.getImage(id), res);
 				} else{
@@ -113,7 +90,7 @@ public class LinearDistance implements PlugInFilter {
 					showResult(res);
 				}
 			}
-			if (doAggregate)
+			if (settings.doAggregate)
 				showResult(res);
 		} else {
 			res = new LinearDistanceResults();
@@ -150,12 +127,12 @@ public class LinearDistance implements PlugInFilter {
 					onEdge = false;
 
 				if ((now != last || isLast)) {
-					if (!(doExcludeEdges && onEdge)) {
+					if (!(settings.doExcludeEdges && onEdge)) {
 						if (last)
 							w.add((double) (count + 1) * calib);
 						else
 							b.add((double) (count + 1) * calib);
-						if (doShowOverlay && overlay != null) {
+						if (settings.doShowOverlay && overlay != null) {
 							for (int yi = 0; yi <= count; yi++) {
 								int ny = Math.max(0, y - yi - 1);
 								if (goX)
@@ -187,10 +164,10 @@ public class LinearDistance implements PlugInFilter {
 		ImageProcessor ip = iplus.getProcessor();
 		ImageProcessor oix = null;
 		ImageProcessor oiy = null;
-		long lineDistanceX = step.intValue();
-		long lineDistanceY = step.intValue();
+		long lineDistanceX = settings.step.intValue();
+		long lineDistanceY = settings.step.intValue();
 		
-		if (doShowOverlay) {
+		if (settings.doShowOverlay) {
 			oix = new ColorProcessor(ip.getWidth(), ip.getHeight());
 			oiy = new ColorProcessor(ip.getWidth(), ip.getHeight());
 			oix.setColor(Color.TRANSLUCENT);
@@ -216,7 +193,7 @@ public class LinearDistance implements PlugInFilter {
 		String unit = "px";
 
 		Calibration cal = iplus.getCalibration();
-		if (doApplyCalibration && cal.scaled()) {
+		if (settings.doApplyCalibration && cal.scaled()) {
 			calx = cal.pixelWidth;
 			caly = cal.pixelHeight;
 
@@ -226,9 +203,9 @@ public class LinearDistance implements PlugInFilter {
 			}
 		}
 
-		if (doCalibrateStep) {
-			lineDistanceX = Math.round((Double) step / calx);
-			lineDistanceY = Math.round((Double) step / caly);
+		if (settings.doCalibrateStep) {
+			lineDistanceX = Math.round((Double) settings.step / calx);
+			lineDistanceY = Math.round((Double) settings.step / caly);
 		}
 
 		doAnalyzeImage(pixels, false, lineDistanceX, wdy, bdy, oiy, caly);
@@ -238,7 +215,7 @@ public class LinearDistance implements PlugInFilter {
 		res.wdy.addList(wdy);
 		res.wdxwdy.addList(wdx, wdy);
 		res.bdx.addList(bdx);
-		res.bdx.addList(bdy);
+		res.bdy.addList(bdy);
 		res.bdxbdy.addList(bdx, bdy);
 		res.wdxbdx.addList(wdx, bdx);
 		res.wdybdy.addList(wdy, bdy);
@@ -248,7 +225,7 @@ public class LinearDistance implements PlugInFilter {
 		res.title = iplus.getTitle();
 		res.unit=unit;
 		
-		if (doShowOverlay) {
+		if (settings.doShowOverlay) {
 			oix.copyBits(oiy, 0, 0, Blitter.ADD);
 			ImageRoi roi = new ImageRoi(0, 0, oix);
 			roi.setName(iplus.getShortTitle() + " measured stripes");
@@ -260,6 +237,8 @@ public class LinearDistance implements PlugInFilter {
 	
 	private void showResult(LinearDistanceResults res) {
 
+		ResultsTable rt = settings.restable;
+		
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;
 
@@ -267,21 +246,21 @@ public class LinearDistance implements PlugInFilter {
 		if (res.unit != null)
 			rt.setValue("Unit", row, res.unit);
 		
-		if (doApplyCalibration && res.calStr != null) 
+		if (settings.doApplyCalibration && res.calStr != null) 
 			rt.setValue("Calibration X/Y", row, res.calStr);
 		
 		String rName, mName, cName;
 		Double rValue;
 		Stat[] Stats = res.getAll();
 
-		for (int mi = 0; mi < doMeasurements.length; mi++) {
-			if (!doMeasurements[mi])
+		for (int mi = 0; mi < settings.doMeasurements.length; mi++) {
+			if (!settings.doMeasurements[mi])
 				continue;
-			mName = measurementsTable[mi];
-			for (int ri = 0; ri < doResults.length; ri++) {
-				if (!doResults[ri])
+			mName = settings.measurementsTable[mi];
+			for (int ri = 0; ri < settings.doResults.length; ri++) {
+				if (!settings.doResults[ri])
 					continue;
-				rName = resultsTable[ri];
+				rName = settings.resultsTable[ri];
 				cName = String.format("%s %s", mName, rName);
 				rValue = Stats[mi].getFormattedValue(ri);
 				rt.setValue(cName, row, rValue);
@@ -292,6 +271,9 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	public void showData(String name, double value, double scaledValue) {
+		
+		ResultsTable rt = settings.restable;
+		
 		rt.incrementCounter();
 		int row = rt.getCounter() - 1;
 		rt.setValue("Name", row, name);
