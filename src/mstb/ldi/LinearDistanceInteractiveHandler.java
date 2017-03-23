@@ -127,6 +127,7 @@ public class LinearDistanceInteractiveHandler {
 				}
 				Integer diff = mark - lastMark;
 				stripes.add(diff.doubleValue());
+				lastMark = mark;
 			}
 		}
 
@@ -138,11 +139,13 @@ public class LinearDistanceInteractiveHandler {
 		String unit = "px";
 		Calibration cal = iplus.getCalibration();
 
-		double calval = 1d;
+		double calval = 1.0;
 		if (settings.doApplyCalibration) {
 			calval = (settings.directionY) ? cal.pixelHeight : cal.pixelWidth;
 			unit = iplus.getCalibration().getUnit();
 		}
+		
+		res.factor = calval;
 
 		rt.setValue("Image", row, iplus.getTitle() + ((settings.directionY) ? " V" : " H"));
 
@@ -151,7 +154,7 @@ public class LinearDistanceInteractiveHandler {
 				continue;
 			String rName = settings.resultsTable[ri];
 			String cName = String.format("%s [%s] %s", "Stripe length", unit, rName);
-			double rValue = res.getFormattedValue(ri) * calval;
+			double rValue = res.getFormattedValue(ri);
 			rt.setValue(cName, row, rValue);
 		}
 

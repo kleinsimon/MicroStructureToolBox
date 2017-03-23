@@ -47,6 +47,7 @@ public class LinearDistance implements PlugInFilter {
 		//gd.addCheckbox("Aggregate measurements of all images", settings.doAggregate);
 		gd.addCheckbox("Exclude stripes cut by Edges", settings.doExcludeEdges);
 		gd.addCheckbox("Show measured pixels as overlay", settings.doShowOverlay);
+		gd.addNumericField("Minimum length of measured line in pixels", settings.minLength, 1);
 		
 
 		gd.addMessage("Measurements");
@@ -58,8 +59,10 @@ public class LinearDistance implements PlugInFilter {
 		if (gd.wasCanceled())
 			return false;
 
-		settings.doApplyCalibration = gd.getNextBoolean();
 		settings.step = Math.max(gd.getNextNumber(), 1d);
+		settings.minLength = Math.max(gd.getNextNumber(), 0);
+		
+		settings.doApplyCalibration = gd.getNextBoolean();
 		settings.doCalibrateStep = gd.getNextBoolean();
 		settings.doIterateAllImages = gd.getNextBoolean();
 		settings.doExcludeEdges = gd.getNextBoolean();
@@ -106,12 +109,15 @@ public class LinearDistance implements PlugInFilter {
 	public void doAnalyzeImage(int[][] pixels, Boolean goX, long step, List<Double> w, List<Double> b,
 			ImageProcessor overlay, double calib) {
 		int color = (goX) ? Color.RED.getRGB() : Color.GREEN.getRGB();
+		int invcolor = (!goX) ? Color.RED.getRGB() : Color.GREEN.getRGB();
 		int count = 0;
+		int prevcount = 0;
 		Boolean now = null;
 		Boolean last = null;
 		Boolean isLast = null;
 		Boolean isFirst = null;
 		Boolean onEdge = null;
+		Boolean swap = false;
 
 		for (int x = 0; x < pixels.length; x += step) {
 			onEdge = true;
@@ -127,25 +133,50 @@ public class LinearDistance implements PlugInFilter {
 					onEdge = false;
 
 				if ((now != last || isLast)) {
+					if (count + 1 < settings.minLength) {
+						swap = true;
+						last = now;
+					} else {
+						swap = false;
+					}
 					if (!(settings.doExcludeEdges && onEdge)) {
 						if (last)
-							w.add((double) (count + 1) * calib);
+							if (swap) {
+								int bn = b.size();
+								if (!isFirst && bn>0) {
+									count += prevcount;
+									b.remove(bn-1);
+								}
+							} else {
+								w.add((double) (count + 1) * calib);								
+							}							
 						else
-							b.add((double) (count + 1) * calib);
+							if (swap) {
+								int wn = w.size();
+								if (!isFirst && wn>0) {
+									count += prevcount;
+									w.remove(wn-1);
+								}
+							} else {
+								b.add((double) (count + 1) * calib);
+							}
 						if (settings.doShowOverlay && overlay != null) {
 							for (int yi = 0; yi <= count; yi++) {
 								int ny = Math.max(0, y - yi - 1);
 								if (goX)
-									overlay.set(ny, x, color);
+									overlay.set(ny, x, ((swap) ? invcolor:color));
 								else
-									overlay.set(x, ny, color);
+									overlay.set(x, ny, ((swap) ? invcolor:color));
 							}
 						}
 					}
-
-					count = 0;
-					isFirst = false;
+					if (!swap) {
+						prevcount = count;
+						count = 0;
+						isFirst = false;
+					}
 				}
+				
 				if ((now == last)) {
 					count++;
 				}
@@ -154,6 +185,7 @@ public class LinearDistance implements PlugInFilter {
 			}
 
 			last = null;
+			prevcount=count;
 			count = 0;
 		}
 	}

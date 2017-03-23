@@ -12,6 +12,7 @@ public class Stat {
 	private Double stD = null;
 	private Integer num = null;
 	private Double median = null;
+	public Double factor = 1.0;
 	private List<Collection<Double>> values = new ArrayList<Collection<Double>>();
 
 	public Stat() {
@@ -68,7 +69,7 @@ public class Stat {
 				}
 			}
 		}
-		return sum;
+		return sum*factor;
 	}
 
 	public double getMean() {
@@ -77,7 +78,7 @@ public class Stat {
 			num = getNum();
 			mean = sum / (double) num;
 		}
-		return mean;
+		return mean*factor;
 	}
 
 	public double getMedian() {
@@ -104,7 +105,7 @@ public class Stat {
 				median = bigList[mid];
 			}
 		}
-		return median;
+		return median*factor;
 	}
 	
 	public double getVariance() {
@@ -121,7 +122,7 @@ public class Stat {
 			}
 			variance = (dst / (double) num);
 		}
-		return variance;
+		return variance*factor;
 	}
 
 	public double getStDev() {
@@ -129,7 +130,7 @@ public class Stat {
 			variance = getVariance();
 			stD = Math.sqrt(variance);
 		}
-		return stD;
+		return stD*factor;
 	}
 	//	String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
 

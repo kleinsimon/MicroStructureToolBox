@@ -7,7 +7,7 @@ public class LinearDistanceSettings {
 	public String[] resultsTable = { "Mean", "Median", "Sum", "Variance", "StDev", "Number" };
 	public String[] measurementsTable = { "White X", "White Y", "White X and Y", "Black X", "Black Y", "Black X and Y",
 			"Black and White X", "Black and White Y", "All" };
-	public Double step;
+	public Double step, minLength;
 	public Integer markLength = 5;
 	public Boolean doCalibrateStep, doIterateAllImages, doExcludeEdges, doShowOverlay, doAggregate, doApplyCalibration;
 	public ResultsTable restable = new ResultsTable();
@@ -20,6 +20,7 @@ public class LinearDistanceSettings {
 	
 	public void load() {
 		step = Prefs.get("stepSize", 1);
+		minLength = Prefs.get("minLength", 0);
 		doApplyCalibration = Prefs.get(prefix + "doApplyCalibration", true);
 		doCalibrateStep = Prefs.get(prefix + "doCalibrateStep", false);
 		doIterateAllImages = Prefs.get(prefix + "doIterateAllImages", true);
@@ -33,6 +34,7 @@ public class LinearDistanceSettings {
 	public void save() {	
 		Prefs.set(prefix + "doApplyScale", doApplyCalibration);
 		Prefs.set(prefix + "stepSize", step);
+		Prefs.set(prefix + "minLength", minLength);
 		Prefs.set(prefix + "doCalibrateStep", doCalibrateStep);
 		Prefs.set(prefix + "doIterateAllImages", doIterateAllImages);
 		Prefs.set(prefix + "doExcludeEdges", doExcludeEdges);
