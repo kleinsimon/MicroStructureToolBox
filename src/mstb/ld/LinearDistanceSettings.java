@@ -19,9 +19,9 @@ public class LinearDistanceSettings {
 	}
 	
 	public void load() {
-		step = Prefs.get("stepSize", 1);
-		minLength = Prefs.get("minLength", 0);
 		doApplyCalibration = Prefs.get(prefix + "doApplyCalibration", true);
+		step = Prefs.get(prefix + "stepSize", 1);
+		minLength = Prefs.get(prefix + "minLength", 0);		
 		doCalibrateStep = Prefs.get(prefix + "doCalibrateStep", false);
 		doIterateAllImages = Prefs.get(prefix + "doIterateAllImages", true);
 		doExcludeEdges = Prefs.get(prefix + "doExcludeEdges", true);
@@ -32,7 +32,7 @@ public class LinearDistanceSettings {
 	}
 	
 	public void save() {	
-		Prefs.set(prefix + "doApplyScale", doApplyCalibration);
+		Prefs.set(prefix + "doApplyCalibration", doApplyCalibration);
 		Prefs.set(prefix + "stepSize", step);
 		Prefs.set(prefix + "minLength", minLength);
 		Prefs.set(prefix + "doCalibrateStep", doCalibrateStep);
