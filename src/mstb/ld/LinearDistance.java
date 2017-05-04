@@ -34,8 +34,6 @@ public class LinearDistance implements PlugInFilter {
 	}
 
 	boolean showDialog() {
-		settings.load();
-
 		GenericDialog gd = new GenericDialog("Linear Distances by Simon Klein");
 		gd.addMessage("Linear Distances Plugin, created by Simon Klein");
 
@@ -59,14 +57,14 @@ public class LinearDistance implements PlugInFilter {
 		if (gd.wasCanceled())
 			return false;
 
-		settings.step = Math.max(gd.getNextNumber(), 1d);
-		settings.minLength = Math.max(gd.getNextNumber(), 0);
-		
 		settings.doApplyCalibration = gd.getNextBoolean();
+		settings.step = Math.max(gd.getNextNumber(), 1d);
 		settings.doCalibrateStep = gd.getNextBoolean();
 		settings.doIterateAllImages = gd.getNextBoolean();
 		settings.doExcludeEdges = gd.getNextBoolean();
 		settings.doShowOverlay = gd.getNextBoolean();
+		settings.minLength = Math.max(gd.getNextNumber(), 0);
+		
 		for (int i = 0; i < settings.doMeasurements.length; i++) {
 			settings.doMeasurements[i] = gd.getNextBoolean();
 		}
@@ -123,7 +121,7 @@ public class LinearDistance implements PlugInFilter {
 			onEdge = true;
 			isFirst = true;
 			for (int y = 0; y < pixels[x].length; y++) {
-				now = (pixels[x][y] == (255));
+				now = (pixels[x][y] >= (128));
 				if (y == 0)
 					last = now;
 				isLast = y == pixels[x].length - 1;
